@@ -33,6 +33,17 @@ def _man(n) -> str:
         return "—"
 
 
+def _oku(n) -> str:
+    """円 → 億円（小数点1桁）。1億未満でも丸まらず表示できる。"""
+    try:
+        v = float(n) / 100_000_000
+        if v >= 100:
+            return f"{v:,.0f}"
+        return f"{v:,.1f}"
+    except (TypeError, ValueError):
+        return "—"
+
+
 def _pct(rate) -> str:
     try:
         return f"{float(rate) * 100:.1f}"
@@ -84,7 +95,8 @@ def _render(template: str, ctx: dict) -> str:
     return out
 
 
-def _build_md_context(form: dict, analysis: dict, chart_paths: dict) -> dict:
+def _build_md_context(form: dict, analysis: dict, chart_paths: dict,
+                      usage: dict | None = None) -> dict:
     fit = analysis.get("fit_score", {})
     rev = analysis.get("revenue_forecast", {})
     cons = rev.get("conservative", {})
@@ -95,6 +107,17 @@ def _build_md_context(form: dict, analysis: dict, chart_paths: dict) -> dict:
     roas = analysis.get("roas_simulation", {})
     plan = analysis.get("plan_recommendation", {})
 
+    # 推奨プランの想定寄付額（中位シナリオ1年目をデフォルト）
+    recommended_name = plan.get("recommended", "—")
+    expected_year1_revenue = mod.get("year1", 0)
+    plan_comp = plan.get("comparison", {}) or {}
+    for key, info in plan_comp.items():
+        if key == recommended_name:
+            expected_year1_revenue = info.get("expected_revenue", expected_year1_revenue)
+            break
+
+    usage = usage or {}
+
     return {
         "business_name": form.get("business_name", "—"),
         "location": f"{form.get('prefecture', '')} {form.get('city', '')}".strip(),
@@ -104,7 +127,7 @@ def _build_md_context(form: dict, analysis: dict, chart_paths: dict) -> dict:
         "business_profile_summary": prof.get("summary", "—"),
         "strengths_list": _bullets(prof.get("strengths", [])),
         "challenges_list": _bullets(prof.get("challenges", [])),
-        "category_avg_donation": f"{int(mkt.get('category_avg_donation', 0) / 100000000):,}",
+        "category_avg_donation": _oku(mkt.get("category_avg_donation", 0)),
         "category_growth_rate": mkt.get("category_growth_rate", "—"),
         "competitor_count": mkt.get("competitor_count", "—"),
         "market_narrative": mkt.get("narrative", "—"),
@@ -129,20 +152,29 @@ def _build_md_context(form: dict, analysis: dict, chart_paths: dict) -> dict:
         "roas": roas.get("roas", "—"),
         "payback_months": roas.get("payback_months", "—"),
         "roas_narrative": roas.get("narrative", "—"),
-        "recommended_plan": plan.get("recommended", "—"),
+        "recommended_plan": recommended_name,
+        "recommended_plan_revenue_man": _man(expected_year1_revenue),
         "plan_rationale": plan.get("rationale", "—"),
         "plan_comparison_table": _plan_comparison_table(plan.get("comparison", {})),
         "next_actions_list": _bullets(analysis.get("next_actions", [])),
+        "usage_model": usage.get("model", "—"),
+        "usage_input_tokens": f"{usage.get('input_tokens', 0):,}",
+        "usage_output_tokens": f"{usage.get('output_tokens', 0):,}",
+        "usage_cost_usd": f"{usage.get('cost_usd', 0):.4f}",
+        "usage_cost_jpy": f"{usage.get('cost_jpy', 0):.2f}",
+        "usage_fx_rate": f"{usage.get('fx_rate', 0):.1f}",
+        "usage_input_price": f"{usage.get('input_price_usd_per_mtok', 0):.2f}",
+        "usage_output_price": f"{usage.get('output_price_usd_per_mtok', 0):.2f}",
     }
 
 
-def generate(form: dict) -> Tuple[str, str, dict]:
+def generate(form: dict) -> Tuple[str, str, dict, dict]:
     """事業者情報フォーム → AI分析 → MD → PDF を生成。
 
     Returns:
-        md_path, pdf_path, analysis(JSON)
+        md_path, pdf_path, analysis(JSON), usage(消費トークン・コスト)
     """
-    analysis = roas_analyzer.analyze(form)
+    analysis, usage = roas_analyzer.analyze(form)
 
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     base_name = f"roas_{_safe_name(form.get('business_name', 'session'))}_{stamp}"
@@ -155,7 +187,7 @@ def generate(form: dict) -> Tuple[str, str, dict]:
 
     with open(_TEMPLATE, encoding="utf-8") as f:
         template = f.read()
-    ctx = _build_md_context(form, analysis, chart_paths)
+    ctx = _build_md_context(form, analysis, chart_paths, usage)
     md_text = _render(template, ctx)
 
     md_path = work_dir / f"{base_name}.md"
@@ -163,7 +195,7 @@ def generate(form: dict) -> Tuple[str, str, dict]:
 
     # チャート画像をmd_pathの隣に置いてあるので、build_pdf相対参照で動く
     pdf_path = _build_pdf_with_images(str(md_path), chart_paths)
-    return str(md_path), pdf_path, analysis
+    return str(md_path), pdf_path, analysis, usage
 
 
 def _build_pdf_with_images(md_path: str, chart_paths: dict) -> str:

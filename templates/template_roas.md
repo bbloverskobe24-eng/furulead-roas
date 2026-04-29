@@ -2,7 +2,18 @@
 
 **事業者名**: {{business_name}}
 **所在地**: {{location}}
+**業種**: {{business_type}}
 **分析日**: {{generated_at}}
+
+---
+
+## 結論：推奨プラン
+
+### 🏆 **{{recommended_plan}}**
+
+**想定初年度寄付額（中位シナリオ）**: 約 {{recommended_plan_revenue_man}} 万円
+
+{{plan_rationale}}
 
 ---
 
@@ -12,33 +23,23 @@
 
 ---
 
-## 1. 事業者プロファイル
+## なぜ「{{recommended_plan}}」を推奨するのか — 3つの根拠
+
+### 根拠①：御社の強みが市場と噛み合う
 
 {{business_profile_summary}}
 
-### 強み
+**強み**
 
 {{strengths_list}}
 
-### 課題
+**乗り越えるべき課題**
 
 {{challenges_list}}
 
 ---
 
-## 2. 市場ベンチマーク（{{business_type}}カテゴリ）
-
-| 指標 | 値 |
-|---|---|
-| カテゴリ年間寄付総額 | {{category_avg_donation}}億円 |
-| カテゴリ成長率 | {{category_growth_rate}}% |
-| 既存競合事業者数 | {{competitor_count}}社 |
-
-{{market_narrative}}
-
----
-
-## 3. 参入適性スコア
+### 根拠②：参入適性スコアが高い
 
 ![参入適性レーダーチャート](radar_fit.png)
 
@@ -48,7 +49,21 @@
 
 ---
 
-## 4. 売上見込み（3シナリオ）
+### 根拠③：市場が伸びている
+
+| 指標 | 値 |
+|---|---|
+| カテゴリ年間寄付総額 | {{category_avg_donation}} 億円 |
+| カテゴリ成長率 | {{category_growth_rate}}% |
+| 既存競合事業者数 | {{competitor_count}} 社 |
+
+{{market_narrative}}
+
+---
+
+## 数字で見る期待リターン
+
+### 売上見込み（3シナリオ）
 
 ![売上予測バーチャート](revenue_forecast.png)
 
@@ -62,15 +77,7 @@
 
 ---
 
-## 5. 商品ラインナップ提案
-
-![商品マトリクス](product_matrix.png)
-
-{{product_table}}
-
----
-
-## 6. ROAS試算
+### ROAS試算（広告投資の回収）
 
 | 項目 | 金額・指標 |
 |---|---|
@@ -86,21 +93,36 @@
 
 ---
 
-## 7. 推奨プラン
+## 商品ラインナップ提案
 
-### 🏆 推奨：**{{recommended_plan}}**
+![商品マトリクス](product_matrix.png)
 
-{{plan_rationale}}
+{{product_table}}
 
-### プラン比較
+---
+
+## プラン比較
 
 {{plan_comparison_table}}
 
 ---
 
-## 8. 次のアクション
+## 次のアクション
 
 {{next_actions_list}}
+
+---
+
+## 分析リソース（参考）
+
+| 項目 | 値 |
+|---|---|
+| 使用モデル | {{usage_model}} |
+| 入力トークン | {{usage_input_tokens}} tok |
+| 出力トークン | {{usage_output_tokens}} tok |
+| 単価（入力 / 出力） | ${{usage_input_price}} / ${{usage_output_price}} per 1M tok |
+| **本レポート生成コスト** | **${{usage_cost_usd}}（約 ¥{{usage_cost_jpy}}）** |
+| 換算レート | 1 USD = {{usage_fx_rate}} 円 |
 
 ---
 

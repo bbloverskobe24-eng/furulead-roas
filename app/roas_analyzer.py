@@ -177,8 +177,13 @@ def _extract_json(text: str) -> dict:
     return json.loads(text)
 
 
-def analyze(form: dict, model: Optional[str] = None) -> dict:
-    """事業者情報フォームをAIに渡しJSON分析結果を返す"""
+def analyze(form: dict, model: Optional[str] = None) -> tuple[dict, dict]:
+    """事業者情報フォームをAIに渡しJSON分析結果と消費リソース情報を返す。
+
+    Returns:
+        (analysis, usage)
+        usage = {model, input_tokens, output_tokens, cost_usd, cost_jpy, fx_rate}
+    """
     from anthropic import Anthropic
 
     api_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -213,4 +218,31 @@ def analyze(form: dict, model: Optional[str] = None) -> dict:
     )
     rule_based = recommend_plan(fit_total, revenue_range, monthly_supply)
     analysis["_rule_based_plan"] = rule_based
-    return analysis
+
+    usage = _build_usage(model_id, msg.usage)
+    return analysis, usage
+
+
+def _build_usage(model_id: str, usage_obj) -> dict:
+    """API消費量からコストを算定。単価は env で上書き可能。"""
+    input_tokens = getattr(usage_obj, "input_tokens", 0) or 0
+    output_tokens = getattr(usage_obj, "output_tokens", 0) or 0
+
+    # USD per 1M tokens — Haiku 4.5 の標準単価をデフォルトに
+    in_price = float(os.environ.get("ANTHROPIC_INPUT_PRICE_USD", 1.00))
+    out_price = float(os.environ.get("ANTHROPIC_OUTPUT_PRICE_USD", 5.00))
+    fx_rate = float(os.environ.get("USD_JPY_RATE", 155.0))
+
+    cost_usd = (input_tokens * in_price + output_tokens * out_price) / 1_000_000
+    cost_jpy = cost_usd * fx_rate
+
+    return {
+        "model": model_id,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "input_price_usd_per_mtok": in_price,
+        "output_price_usd_per_mtok": out_price,
+        "cost_usd": round(cost_usd, 6),
+        "cost_jpy": round(cost_jpy, 2),
+        "fx_rate": fx_rate,
+    }

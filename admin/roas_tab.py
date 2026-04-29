@@ -176,11 +176,12 @@ def render():
             return
         try:
             with st.spinner("AI分析中... (30〜60秒程度)"):
-                md_path, pdf_path, analysis = roas_report.generate(form)
+                md_path, pdf_path, analysis, usage = roas_report.generate(form)
             st.success(f"生成しました: {os.path.basename(pdf_path)}")
             st.session_state["roas_last_pdf"] = pdf_path
             st.session_state["roas_last_md"] = md_path
             st.session_state["roas_last_analysis"] = analysis
+            st.session_state["roas_last_usage"] = usage
         except Exception as e:
             st.error(f"生成失敗: {e}")
             st.exception(e)
@@ -188,6 +189,24 @@ def render():
     if "roas_last_pdf" in st.session_state and os.path.exists(st.session_state["roas_last_pdf"]):
         st.divider()
         st.markdown("##### 生成結果")
+
+        usage = st.session_state.get("roas_last_usage") or {}
+        if usage:
+            u1, u2, u3, u4 = st.columns(4)
+            with u1:
+                st.metric("入力トークン", f"{usage.get('input_tokens', 0):,}")
+            with u2:
+                st.metric("出力トークン", f"{usage.get('output_tokens', 0):,}")
+            with u3:
+                st.metric("コスト (USD)", f"${usage.get('cost_usd', 0):.4f}")
+            with u4:
+                st.metric("コスト (JPY)", f"¥{usage.get('cost_jpy', 0):.2f}")
+            st.caption(
+                f"使用モデル: `{usage.get('model', '—')}` / "
+                f"単価: 入力 ${usage.get('input_price_usd_per_mtok', 0):.2f} / 出力 ${usage.get('output_price_usd_per_mtok', 0):.2f} per 1M tok / "
+                f"換算レート 1 USD = {usage.get('fx_rate', 0):.1f} 円"
+            )
+
         c1, c2 = st.columns(2)
         with c1:
             with open(st.session_state["roas_last_pdf"], "rb") as f:
