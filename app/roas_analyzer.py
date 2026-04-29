@@ -188,12 +188,19 @@ def analyze(form: dict, model: Optional[str] = None) -> dict:
     client = Anthropic(api_key=api_key)
     model_id = model or os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
 
+    max_tokens = 8192
     msg = client.messages.create(
         model=model_id,
-        max_tokens=4096,
+        max_tokens=max_tokens,
         system=_system_prompt(),
         messages=[{"role": "user", "content": _build_user_prompt(form)}],
     )
+
+    if msg.stop_reason == "max_tokens":
+        raise RuntimeError(
+            f"AI応答がmax_tokens({max_tokens})で打ち切られました。"
+            "プロンプトを短縮するかmax_tokensを増やしてください。"
+        )
 
     text = "".join(b.text for b in msg.content if hasattr(b, "text"))
     analysis = _extract_json(text)
