@@ -1,0 +1,12 @@
+.env
+.env.local
+.streamlit/secrets.toml
+data/*.db
+data/*.sqlite
+data/generated_pdfs/
+data/generated_reports/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store

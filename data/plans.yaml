@@ -1,0 +1,56 @@
+# ふるりーど プラン定義（仮データ — 正式版はCSO提供予定）
+plans:
+  silver:
+    name: シルバー
+    monthly_fee: 50000
+    setup_fee: 100000
+    description: 参入初期向け／低リスクスタート
+    included:
+      - 自治体マッチング（1自治体）
+      - 返礼品撮影アドバイス
+      - 寄付ポータル掲載サポート（1ポータル）
+      - 月次レポート
+    target:
+      - 年商1億円未満
+      - 初参入の事業者
+      - 月間供給量200個未満
+    expected_first_year_donation: 5000000
+    expected_first_year_donation_max: 10000000
+
+  gold:
+    name: ゴールド
+    monthly_fee: 150000
+    setup_fee: 200000
+    description: 本格運用／複数返礼品・安定供給向け
+    included:
+      - 自治体マッチング（最大3自治体）
+      - 返礼品撮影＋ECページ制作
+      - 寄付ポータル掲載サポート（3ポータル）
+      - 広告運用支援（月50万円相当の運用代行）
+      - 月次レポート＋戦略MTG
+    target:
+      - 年商1億〜5億円
+      - 本格運用希望
+      - 月間供給量500個以上
+    expected_first_year_donation: 20000000
+    expected_first_year_donation_max: 50000000
+
+  platinum:
+    name: プラチナ
+    monthly_fee: 400000
+    setup_fee: 500000
+    description: トップライン／専属サポート・自治体共同企画
+    included:
+      - 自治体マッチング（無制限）
+      - 専属マーケター配置
+      - 全ポータル掲載サポート
+      - 広告運用＋クリエイティブ制作
+      - 自治体共同企画・PRイベント
+      - 週次レポート＋月次戦略MTG
+      - 法務・物流オペレーション支援
+    target:
+      - 年商5億円以上
+      - 全国展開希望
+      - 月間供給量1000個以上
+    expected_first_year_donation: 80000000
+    expected_first_year_donation_max: 200000000
