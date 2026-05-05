@@ -16,6 +16,20 @@ auth.require_login()
 
 storage.init_db()
 
+
+def _firestore_available() -> bool:
+    """GCP認証情報が利用可能かを即座に判定（Firestore接続試行はしない）"""
+    try:
+        import google.auth
+        google.auth.default()
+        return True
+    except Exception:
+        return False
+
+
+_FIRESTORE_OK = _firestore_available()
+_FIRESTORE_ERR = "⚠️ Firestore未接続です。GCPサービスアカウント設定後に再デプロイで復活します。"
+
 st.title("🚀 ふるりーどSPEED 管理画面")
 st.caption("CSO用：回答レビュー・PDF生成・承認・配信 / ROAS分析")
 
@@ -27,27 +41,34 @@ tab1, tab2, tab3, tab4 = st.tabs(
 # タブ1：セッション一覧
 # ==================================================
 with tab1:
-    try:
-        sessions = storage.list_sessions()
-        if not sessions:
-            st.info("まだセッションがありません。")
-        else:
-            df = pd.DataFrame(sessions)
-            df = df[["line_user_id", "display_name", "course", "status",
-                     "completeness", "last_active"]]
-            st.dataframe(df, use_container_width=True, hide_index=True)
-    except Exception as e:
-        st.error(f"⚠️ Firestore未接続です。GCPサービスアカウント設定後に再デプロイで復活します。\n\n{type(e).__name__}: {e}")
+    if not _FIRESTORE_OK:
+        st.error(_FIRESTORE_ERR)
+    else:
+        try:
+            sessions = storage.list_sessions()
+            if not sessions:
+                st.info("まだセッションがありません。")
+            else:
+                df = pd.DataFrame(sessions)
+                df = df[["line_user_id", "display_name", "course", "status",
+                         "completeness", "last_active"]]
+                st.dataframe(df, use_container_width=True, hide_index=True)
+        except Exception as e:
+            st.error(f"{_FIRESTORE_ERR}\n\n{type(e).__name__}: {e}")
 
 # ==================================================
 # タブ2：個別レビュー
 # ==================================================
 with tab2:
-    try:
-        sessions = storage.list_sessions()
-    except Exception as e:
-        st.error(f"⚠️ Firestore未接続です。GCPサービスアカウント設定後に再デプロイで復活します。\n\n{type(e).__name__}: {e}")
+    if not _FIRESTORE_OK:
+        st.error(_FIRESTORE_ERR)
         sessions = []
+    else:
+        try:
+            sessions = storage.list_sessions()
+        except Exception as e:
+            st.error(f"{_FIRESTORE_ERR}\n\n{type(e).__name__}: {e}")
+            sessions = []
     completed = [s for s in sessions if s["completeness"] >= 100]
     if not completed:
         st.info("レビュー対象（100%回答完了）のセッションはまだありません。")
@@ -157,11 +178,15 @@ with tab2:
 # タブ3：統計ダッシュボード
 # ==================================================
 with tab3:
-    try:
-        sessions = storage.list_sessions()
-    except Exception as e:
-        st.error(f"⚠️ Firestore未接続です。GCPサービスアカウント設定後に再デプロイで復活します。\n\n{type(e).__name__}: {e}")
+    if not _FIRESTORE_OK:
+        st.error(_FIRESTORE_ERR)
         sessions = []
+    else:
+        try:
+            sessions = storage.list_sessions()
+        except Exception as e:
+            st.error(f"{_FIRESTORE_ERR}\n\n{type(e).__name__}: {e}")
+            sessions = []
     if not sessions:
         st.info("データがありません。")
     else:
