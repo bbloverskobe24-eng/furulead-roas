@@ -27,20 +27,27 @@ tab1, tab2, tab3, tab4 = st.tabs(
 # タブ1：セッション一覧
 # ==================================================
 with tab1:
-    sessions = storage.list_sessions()
-    if not sessions:
-        st.info("まだセッションがありません。")
-    else:
-        df = pd.DataFrame(sessions)
-        df = df[["line_user_id", "display_name", "course", "status",
-                 "completeness", "last_active"]]
-        st.dataframe(df, use_container_width=True, hide_index=True)
+    try:
+        sessions = storage.list_sessions()
+        if not sessions:
+            st.info("まだセッションがありません。")
+        else:
+            df = pd.DataFrame(sessions)
+            df = df[["line_user_id", "display_name", "course", "status",
+                     "completeness", "last_active"]]
+            st.dataframe(df, use_container_width=True, hide_index=True)
+    except Exception as e:
+        st.error(f"⚠️ Firestore未接続です。GCPサービスアカウント設定後に再デプロイで復活します。\n\n{type(e).__name__}: {e}")
 
 # ==================================================
 # タブ2：個別レビュー
 # ==================================================
 with tab2:
-    sessions = storage.list_sessions()
+    try:
+        sessions = storage.list_sessions()
+    except Exception as e:
+        st.error(f"⚠️ Firestore未接続です。GCPサービスアカウント設定後に再デプロイで復活します。\n\n{type(e).__name__}: {e}")
+        sessions = []
     completed = [s for s in sessions if s["completeness"] >= 100]
     if not completed:
         st.info("レビュー対象（100%回答完了）のセッションはまだありません。")
@@ -150,7 +157,11 @@ with tab2:
 # タブ3：統計ダッシュボード
 # ==================================================
 with tab3:
-    sessions = storage.list_sessions()
+    try:
+        sessions = storage.list_sessions()
+    except Exception as e:
+        st.error(f"⚠️ Firestore未接続です。GCPサービスアカウント設定後に再デプロイで復活します。\n\n{type(e).__name__}: {e}")
+        sessions = []
     if not sessions:
         st.info("データがありません。")
     else:
