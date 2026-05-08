@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ふるりーど サービスポジショニング全体マップ</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --blue: #2563EB;
+    --blue-dark: #1E40AF;
+    --blue-light: #EFF6FF;
+    --blue-mid: #DBEAFE;
+    --blue-soft: #F5F9FF;
+    --text: #0F172A;
+    --text-sub: #475569;
+    --border: #DBEAFE;
+    --green: #059669;
+    --green-light: #D1FAE5;
+    --amber: #D97706;
+    --amber-light: #FEF3C7;
+    --purple: #7C3AED;
+    --purple-light: #EDE9FE;
+    --pink: #DB2777;
+    --pink-light: #FCE7F3;
+    --gray: #64748B;
+    --gray-light: #F1F5F9;
+    /* プラン色 */
+    --tier-free: #94A3B8;
+    --tier-speed: #06C755;
+    --tier-speed-light: #DCFCE7;
+    --tier-silver: #64748B;
+    --tier-silver-light: #F1F5F9;
+    --tier-gold: #D97706;
+    --tier-gold-light: #FEF3C7;
+    --tier-platinum: #7C3AED;
+    --tier-platinum-light: #EDE9FE;
+  }
+  body {
+    font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    background: var(--blue-soft);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 24px 16px;
+  }
+  .container { max-width: 1180px; margin: 0 auto; }
+  header {
+    background: white;
+    border-radius: 14px;
+    padding: 30px 30px 24px;
+    margin-bottom: 24px;
+    border-left: 6px solid var(--blue);
+    box-shadow: 0 2px 8px rgba(37,99,235,0.06);
+  }
+  header h1 { font-size: 26px; font-weight: 900; color: var(--blue-dark); margin-bottom: 6px; }
+  header .meta { font-size: 12px; color: var(--text-sub); }
+  header .lead {
+    font-size: 14px;
+    color: var(--text-sub);
+    margin-top: 12px;
+    line-height: 1.7;
+  }
+
+  .section {
+    background: white;
+    border-radius: 16px;
+    padding: 26px 30px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+  }
+  .section h2 {
+    font-size: 19px;
+    color: var(--blue-dark);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--blue-light);
+  }
+  .section .lead {
+    font-size: 13px;
+    color: var(--text-sub);
+    margin-bottom: 20px;
+  }
+
+  /* カスタマージャーニー */
+  .journey {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .journey-step {
+    text-align: center;
+    padding: 14px 10px;
+    background: var(--blue-light);
+    border-radius: 10px;
+    border-bottom: 4px solid var(--blue);
+  }
+  .journey-step h3 {
+    font-size: 13px;
+    color: var(--blue-dark);
+    margin-bottom: 4px;
+  }
+  .journey-step p { font-size: 11px; color: var(--text-sub); line-height: 1.4; }
+  .journey-step.j1 { background: #FEE2E2; border-bottom-color: #DC2626; }
+  .journey-step.j1 h3 { color: #991B1B; }
+  .journey-step.j2 { background: var(--amber-light); border-bottom-color: var(--amber); }
+  .journey-step.j2 h3 { color: var(--amber); }
+  .journey-step.j3 { background: var(--blue-light); border-bottom-color: var(--blue); }
+  .journey-step.j4 { background: var(--green-light); border-bottom-color: var(--green); }
+  .journey-step.j4 h3 { color: var(--green); }
+  .journey-step.j5 { background: var(--purple-light); border-bottom-color: var(--purple); }
+  .journey-step.j5 h3 { color: var(--purple); }
+
+  /* プラン階層 */
+  .tier-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .tier {
+    background: white;
+    border-radius: 12px;
+    padding: 18px 16px;
+    border: 2px solid var(--border);
+    border-top-width: 6px;
+    display: flex;
+    flex-direction: column;
+  }
+  .tier.free { border-top-color: var(--tier-free); }
+  .tier.speed { border-top-color: var(--tier-speed); }
+  .tier.silver { border-top-color: var(--tier-silver); }
+  .tier.gold { border-top-color: var(--tier-gold); }
+  .tier.platinum { border-top-color: var(--tier-platinum); }
+
+  .tier-name {
+    font-size: 15px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .tier.free .tier-name { color: var(--tier-free); }
+  .tier.speed .tier-name { color: var(--tier-speed); }
+  .tier.silver .tier-name { color: var(--tier-silver); }
+  .tier.gold .tier-name { color: var(--tier-gold); }
+  .tier.platinum .tier-name { color: var(--tier-platinum); }
+
+  .tier-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    background: var(--gray-light);
+    color: var(--gray);
+  }
+  .tier-price {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .tier-price small { font-size: 11px; color: var(--text-sub); font-weight: 500; }
+  .tier-target {
+    font-size: 11.5px;
+    color: var(--text-sub);
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .tier-features {
+    font-size: 11px;
+    color: var(--text);
+    flex: 1;
+    margin-bottom: 10px;
+  }
+  .tier-features li { margin-bottom: 4px; padding-left: 12px; position: relative; }
+  .tier-features li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--green);
+    font-weight: 700;
+  }
+  .tier-features li.no::before {
+    content: "—";
+    color: var(--gray);
+  }
+  .tier-channel {
+    font-size: 10.5px;
+    background: var(--blue-soft);
+    color: var(--blue-dark);
+    padding: 6px 8px;
+    border-radius: 6px;
+    margin-top: auto;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  /* 動線フロー */
+  .funnel {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .funnel-row {
+    display: grid;
+    grid-template-columns: 220px 1fr 220px;
+    gap: 14px;
+    align-items: stretch;
+  }
+  .funnel-tier {
+    background: var(--blue-light);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--blue-dark);
+    text-align: center;
+    align-self: center;
+  }
+  .funnel-tier.free { background: #E2E8F0; color: var(--gray); }
+  .funnel-tier.speed { background: var(--tier-speed-light); color: var(--tier-speed); }
+  .funnel-tier.silver { background: var(--tier-silver-light); color: var(--tier-silver); }
+  .funnel-tier.gold { background: var(--tier-gold-light); color: var(--tier-gold); }
+  .funnel-tier.platinum { background: var(--tier-platinum-light); color: var(--tier-platinum); }
+
+  .funnel-content {
+    background: white;
+    border-radius: 8px;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--text-sub);
+    line-height: 1.6;
+  }
+  .funnel-content strong { color: var(--blue-dark); }
+  .funnel-next {
+    background: var(--green-light);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 11.5px;
+    color: var(--green);
+    text-align: center;
+    align-self: center;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .funnel-arrow-down {
+    text-align: center;
+    color: var(--gray);
+    font-size: 16px;
+    margin: -2px 0;
+  }
+
+  /* チャネル別ナーチャリング */
+  .channel-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 12px;
+  }
+  .channel-card {
+    background: white;
+    border-radius: 10px;
+    padding: 16px 18px;
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--blue);
+  }
+  .channel-card.line { border-left-color: #06C755; }
+  .channel-card.consult { border-left-color: var(--purple); }
+  .channel-card h3 { font-size: 14px; color: var(--blue-dark); margin-bottom: 8px; }
+  .channel-card.line h3 { color: #06C755; }
+  .channel-card.consult h3 { color: var(--purple); }
+  .channel-card ul { font-size: 12px; padding-left: 18px; color: var(--text-sub); line-height: 1.7; }
+  .channel-card ul li { margin-bottom: 4px; }
+
+  /* SPEED有料会員プラン */
+  .speed-detail {
+    background: var(--tier-speed-light);
+    border-radius: 12px;
+    padding: 20px 24px;
+    border-left: 6px solid var(--tier-speed);
+    margin-top: 12px;
+  }
+  .speed-detail h3 {
+    font-size: 16px;
+    color: var(--tier-speed);
+    margin-bottom: 10px;
+  }
+  .speed-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 14px;
+  }
+  .speed-sub {
+    background: white;
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .speed-sub h4 {
+    font-size: 13px;
+    color: var(--blue-dark);
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .speed-sub .price {
+    font-size: 17px;
+    font-weight: 900;
+    color: var(--tier-speed);
+    margin-bottom: 8px;
+  }
+  .speed-sub ul { font-size: 11.5px; padding-left: 16px; color: var(--text-sub); line-height: 1.6; }
+  .speed-sub ul li { margin-bottom: 3px; }
+
+  /* マッピング表 */
+  .mapping-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 12px;
+  }
+  .mapping-table th, .mapping-table td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .mapping-table th {
+    background: var(--blue-light);
+    color: var(--blue-dark);
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .mapping-table td.role {
+    font-weight: 700;
+    color: var(--blue-dark);
+    width: 24%;
+  }
+
+  .insight {
+    background: var(--green-light);
+    border-left: 5px solid var(--green);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .insight strong { color: var(--green); }
+
+  footer { text-align: center; color: var(--text-sub); font-size: 11px; padding: 20px 0; }
+
+  @media (max-width: 900px) {
+    .journey { grid-template-columns: repeat(2, 1fr); }
+    .tier-grid { grid-template-columns: repeat(2, 1fr); }
+    .funnel-row { grid-template-columns: 1fr; }
+    .channel-grid { grid-template-columns: 1fr; }
+    .speed-tabs { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>ふるりーど サービスポジショニング全体マップ</h1>
+    <div class="meta">無料エントリー → 有料会員 → コンサルプランの引き上げ動線　／　2026-05-07</div>
+    <p class="lead">
+      「ふるりーどSPEED」は<strong>無料の入口</strong>として位置付け、興味を引いた事業者を SPEED有料会員（Light / Standard）→ コンサルプラン（シルバー / ゴールド / プラチナ）へと段階的に引き上げる、5階層 + 無料の階段設計です。料金は<strong>営業プレゼン資料 v2.5</strong> 準拠（税別）。
+    </p>
+  </header>
+
+  <!-- カスタマージャーニー -->
+  <div class="section">
+    <h2>顧客旅程（カスタマージャーニー）</h2>
+    <p class="lead">事業者の心理ステージごとに、提供するチャネル・サービスを変えていく</p>
+    <div class="journey">
+      <div class="journey-step j1">
+        <h3>① 認知</h3>
+        <p>「ふるさと納税参入」を知る</p>
+      </div>
+      <div class="journey-step j2">
+        <h3>② 興味</h3>
+        <p>自社でも可能か知りたい</p>
+      </div>
+      <div class="journey-step j3">
+        <h3>③ 比較・検討</h3>
+        <p>具体的な数字を見たい</p>
+      </div>
+      <div class="journey-step j4">
+        <h3>④ 購入（契約）</h3>
+        <p>プラン選択・契約締結</p>
+      </div>
+      <div class="journey-step j5">
+        <h3>⑤ 利用・ロイヤル化</h3>
+        <p>運用継続・アップセル</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5階層プラン -->
+  <div class="section">
+    <h2>5階層のサービス階段</h2>
+    <p class="lead">無料エントリーから本格コンサルまで、料金と提供価値を段階的に引き上げ</p>
+    <div class="tier-grid">
+
+      <div class="tier free">
+        <div class="tier-name">無料</div>
+        <div class="tier-tag">エントリー</div>
+        <div class="tier-price">¥0</div>
+        <div class="tier-target">参入を検討し始めた事業者すべて</div>
+        <ul class="tier-features">
+          <li>LP閲覧</li>
+          <li>公式LINE登録</li>
+          <li>簡易5問診断</li>
+          <li>興味付け版PDF</li>
+          <li class="no">詳細レポート</li>
+          <li class="no">継続支援</li>
+        </ul>
+        <div class="tier-channel">公式LINE「ふるりーどSPEED」</div>
+      </div>
+
+      <div class="tier speed">
+        <div class="tier-name">⚡ SPEED Light</div>
+        <div class="tier-tag">公式LINE有料会員</div>
+        <div class="tier-price">¥4,980<small>/月</small></div>
+        <div class="tier-target">自走で参入準備したい事業者</div>
+        <ul class="tier-features">
+          <li>月1回 詳細診断</li>
+          <li>5サイトベンチマーク調査</li>
+          <li>AI改善提案レポート</li>
+          <li>LINE限定コンテンツ</li>
+          <li>オンラインサロン（閲覧）</li>
+          <li class="no">人的サポート</li>
+        </ul>
+        <div class="tier-channel">公式LINE</div>
+      </div>
+
+      <div class="tier speed">
+        <div class="tier-name">⚡ SPEED Standard</div>
+        <div class="tier-tag">公式LINE有料会員</div>
+        <div class="tier-price">¥9,800<small>/月</small></div>
+        <div class="tier-target">継続的に分析活用したい事業者</div>
+        <ul class="tier-features">
+          <li>Light の全機能</li>
+          <li>診断 月3回</li>
+          <li>SEO改善案・競合上位10商品分析</li>
+          <li>サロン質問・コメント可</li>
+          <li>月1回 グループQ&A（Zoom）</li>
+          <li class="no">個別コンサル</li>
+        </ul>
+        <div class="tier-channel">公式LINE</div>
+      </div>
+
+      <div class="tier silver">
+        <div class="tier-name">🥈 シルバー</div>
+        <div class="tier-tag">お試しコンサル</div>
+        <div class="tier-price">¥30,000<small>/月</small></div>
+        <div class="tier-target">年商1億未満／初参入</div>
+        <ul class="tier-features">
+          <li>初期費用 ¥300,000</li>
+          <li>成果報酬 20%</li>
+          <li>運用改善・SEO・企画支援</li>
+          <li>サムネイル制作（1商品）</li>
+          <li>掲載申請代行・自治体調整</li>
+          <li>月次MTG</li>
+        </ul>
+        <div class="tier-channel">ふるりーど本体（有人）</div>
+      </div>
+
+      <div class="tier gold">
+        <div class="tier-name">🥇 ゴールド</div>
+        <div class="tier-tag">スタンダード</div>
+        <div class="tier-price">¥50,000<small>/月</small></div>
+        <div class="tier-target">年商1〜5億／本格展開</div>
+        <ul class="tier-features">
+          <li>初期費用 ¥500,000</li>
+          <li>成果報酬 10%</li>
+          <li>シルバーの全機能</li>
+          <li>物撮り・サムネ（5商品）</li>
+          <li>レビュー獲得施策</li>
+          <li>プロモーション設計</li>
+        </ul>
+        <div class="tier-channel">ふるりーど本体（有人）</div>
+      </div>
+
+      <div class="tier platinum">
+        <div class="tier-name">💎 プラチナ</div>
+        <div class="tier-tag">フルパッケージ</div>
+        <div class="tier-price">¥100,000<small>/月</small></div>
+        <div class="tier-target">年商5億以上／全国展開</div>
+        <ul class="tier-features">
+          <li>初期費用 ¥1,000,000</li>
+          <li>成果報酬 5%</li>
+          <li>ゴールドの全機能</li>
+          <li>現地撮影・動画（10商品）</li>
+          <li>Instagram支援・キャンペーン</li>
+          <li>テレビ連動・データ分析</li>
+        </ul>
+        <div class="tier-channel">ふるりーど本体（有人）</div>
+      </div>
+
+    </div>
+
+    <p style="font-size:11.5px;color:var(--text-sub);margin-top:14px;text-align:center;">
+      ※ コンサル系プラン（シルバー / ゴールド / プラチナ）は税別表示。割引条件あり: 自治体申請なし -30% / デザインなし -30% / 両方 -60%
+    </p>
+
+    <div class="insight">
+      <strong>💡 SPEED（公式LINE有料会員）の戦略的意義</strong><br>
+      「興味あるけど、いきなりシルバー（月3万 + 初期30万）は高い」事業者の<strong>受け皿</strong>として機能。月数千円なら継続しやすく、結果的にシルバー以上への引き上げ確率が上がる。「自走したい」「コンサルは不要」という層にも収益化が可能。
+    </div>
+  </div>
+
+  <!-- SPEED詳細 -->
+  <div class="section">
+    <h2>⚡ SPEED（公式LINE有料会員）— 詳細</h2>
+    <p class="lead">
+      公式LINE「ふるりーどSPEED」を有料会員化。月額制で診断・分析・コミュニティを継続提供
+    </p>
+
+    <div class="speed-detail">
+      <h3>2サブプラン構成（SPEED Light / SPEED Standard）</h3>
+      <p style="font-size:12.5px;color:var(--text-sub);">
+        会員はLINE経由で全機能にアクセス可能。Stripe決済で月額自動課金。
+      </p>
+
+      <div class="speed-tabs">
+        <div class="speed-sub">
+          <h4>SPEED Light</h4>
+          <div class="price">¥4,980<small style="font-size:11px;color:var(--text-sub);"> /月（税別）</small></div>
+          <ul>
+            <li>ふるさと納税適正度スコア診断（月1回）</li>
+            <li>5サイトベンチマーク調査レポート（月1回）</li>
+            <li>AIによる改善提案（自動生成）</li>
+            <li>オンラインサロン参加（情報閲覧のみ）</li>
+            <li>LINE会員限定コンテンツ配信</li>
+          </ul>
+        </div>
+        <div class="speed-sub">
+          <h4>SPEED Standard</h4>
+          <div class="price">¥9,800<small style="font-size:11px;color:var(--text-sub);"> /月（税別）</small></div>
+          <ul>
+            <li>Light の全機能</li>
+            <li>適正度スコア診断（月3回）</li>
+            <li>商品名・SEOキーワード改善案</li>
+            <li>競合上位10商品の詳細分析</li>
+            <li>オンラインサロン（質問・コメント可）</li>
+            <li>月1回グループQ&Aセッション（Zoom）</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 引き上げ動線 -->
+  <div class="section">
+    <h2>引き上げ動線（無料 → 有料 → コンサル）</h2>
+    <p class="lead">各階層の事業者に、「次のステップ」を自然に提示するシナリオ</p>
+
+    <div class="funnel">
+
+      <div class="funnel-row">
+        <div class="funnel-tier free">無料エントリー</div>
+        <div class="funnel-content">
+          <strong>LP / SNS / 紹介</strong> → 公式LINE「ふるりーどSPEED」友だち追加 → 簡易5問診断 → 興味付け版PDF配信
+          <br><small>所要時間: 3〜5分／KPI: LINE登録から診断完了 60%以上</small>
+        </div>
+        <div class="funnel-next">
+          結果に興味を持った人へ、<br>SPEED会員 or 個別相談を提案
+        </div>
+      </div>
+      <div class="funnel-arrow-down">▼</div>
+
+      <div class="funnel-row">
+        <div class="funnel-tier speed">⚡ SPEED Light / Standard</div>
+        <div class="funnel-content">
+          <strong>LINE経由でSPEED会員登録（Stripe決済）</strong> → 月1〜3回の診断 → 競合分析・SEO改善案を継続提供 → オンラインサロンでの相互交流
+          <br><small>所要時間: 申込3分／KPI: 無料診断者の5〜10%が有料化</small>
+        </div>
+        <div class="funnel-next">
+          自走に限界を感じた人へ、<br>シルバー以上のコンサルを提案
+        </div>
+      </div>
+      <div class="funnel-arrow-down">▼</div>
+
+      <div class="funnel-row">
+        <div class="funnel-tier silver">🥈 シルバー（お試し）</div>
+        <div class="funnel-content">
+          <strong>個別商談 → ヒアリングシート → 一次営業版PDF</strong> → コンサル契約（初期30万・月3万・成果報酬20%）
+          <br><small>商談から契約まで2〜4週間／KPI: SPEED会員から30%以上</small>
+        </div>
+        <div class="funnel-next">
+          月間寄付額が1,000万を超え、<br>本格運用を希望
+        </div>
+      </div>
+      <div class="funnel-arrow-down">▼</div>
+
+      <div class="funnel-row">
+        <div class="funnel-tier gold">🥇 ゴールド（スタンダード）</div>
+        <div class="funnel-content">
+          <strong>初期50万・月5万・成果報酬10%</strong> → デザイン制作5商品・物撮り・プロモ設計・レビュー獲得
+          <br><small>シルバーから6ヶ月〜1年での移行を想定</small>
+        </div>
+        <div class="funnel-next">
+          全国展開・複数自治体・<br>専属サポート希望
+        </div>
+      </div>
+      <div class="funnel-arrow-down">▼</div>
+
+      <div class="funnel-row">
+        <div class="funnel-tier platinum">💎 プラチナ（フルパッケージ）</div>
+        <div class="funnel-content">
+          <strong>初期100万・月10万・成果報酬5%</strong> → 現地撮影・動画10商品・Instagram支援・テレビ連動・データ分析レポート
+          <br><small>ゴールドから1〜2年での到達を想定／LTV最大化フェーズ</small>
+        </div>
+        <div class="funnel-next">
+          ロイヤル顧客化・<br>事例化・紹介源
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ふるりーど vs ふるりーどSPEED 役割整理 -->
+  <div class="section">
+    <h2>「ふるりーど」と「ふるりーどSPEED」の使い分け</h2>
+    <p class="lead">本体ブランドとサブブランドの位置付けを明確化</p>
+
+    <table class="mapping-table">
+      <thead>
+        <tr><th>項目</th><th>ふるりーどSPEED（サブ）</th><th>ふるりーど 本体</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="role">ブランド役割</td>
+          <td>無料エントリー・興味付け・自走支援</td>
+          <td>有人コンサル・本格成果支援</td>
+        </tr>
+        <tr>
+          <td class="role">主要チャネル</td>
+          <td>LP / 公式LINE / SNS</td>
+          <td>個別商談（オンライン・対面）</td>
+        </tr>
+        <tr>
+          <td class="role">対応プラン</td>
+          <td>無料診断 ＋ SPEED Light / Standard（有料LINE会員）</td>
+          <td>シルバー / ゴールド / プラチナ</td>
+        </tr>
+        <tr>
+          <td class="role">対象事業者</td>
+          <td>これから検討する事業者・自走したい事業者</td>
+          <td>本気で参入したい事業者・既参入で伸ばしたい事業者</td>
+        </tr>
+        <tr>
+          <td class="role">価格帯（税別）</td>
+          <td>無料 〜 ¥9,800/月</td>
+          <td>初期 ¥30万〜100万 + 月額 ¥3〜10万 + 成果報酬5〜20%</td>
+        </tr>
+        <tr>
+          <td class="role">提供価値</td>
+          <td>気づき・診断・コミュニティ</td>
+          <td>実行支援・成果保証・伴走</td>
+        </tr>
+        <tr>
+          <td class="role">運用負荷</td>
+          <td>自動化中心（AI＋自走）</td>
+          <td>人的サポート中心（担当者付き）</td>
+        </tr>
+        <tr>
+          <td class="role">マーケKPI</td>
+          <td>LINE登録数・診断完了率・有料化率</td>
+          <td>商談化率・受注率・LTV</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="insight">
+      <strong>💡 戦略の核心</strong><br>
+      ふるりーどSPEEDは「本体への流入装置」と「自走層の収益化（ブロンズ）」の二役を担う。<br>
+      → コンサル化しない事業者からも収益が立つ／コンサル化したい事業者には自然な引き上げ動線
+    </div>
+  </div>
+
+  <!-- チャネル別の役割 -->
+  <div class="section">
+    <h2>2チャネル並走運用</h2>
+    <p class="lead">公式LINE と コンサル営業 の機能分担</p>
+
+    <div class="channel-grid">
+      <div class="channel-card line">
+        <h3>📱 公式LINE「ふるりーどSPEED」</h3>
+        <ul>
+          <li><strong>無料層</strong>：簡易5問診断 → 興味付けPDF配信</li>
+          <li><strong>SPEED層</strong>：月額会員機能（診断・分析・サロン）</li>
+          <li>定期的な業界情報配信（ふるさと納税ニュース、競合分析）</li>
+          <li>セミナー・イベント告知</li>
+          <li>無料層 → SPEED層への自動引き上げシナリオ</li>
+          <li>SPEED → コンサルへの「個別相談予約」窓口</li>
+        </ul>
+      </div>
+      <div class="channel-card consult">
+        <h3>👔 コンサル営業（ふるりーど本体）</h3>
+        <ul>
+          <li>商談予約・ヒアリングシート配布</li>
+          <li>一次営業版PDFを使った提案</li>
+          <li>シルバー / ゴールド / プラチナ 契約獲得</li>
+          <li>契約後の運用支援（撮影・掲載・広告）</li>
+          <li>事業者の事例化（成功事例コンテンツ→公式LINE還元）</li>
+          <li>定期的な戦略MTG・成果レポート</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 既存コンテンツ活用マップ -->
+  <div class="section">
+    <h2>既存コンテンツ活用マップ — フェーズ別フック</h2>
+    <p class="lead">
+      <strong>外部提示OKは「弊社が分析・作成した汎用コンテンツ」のみ</strong>。顧客固有の提案書・契約条件・個人情報を含むものは社内利用に留める
+    </p>
+
+    <div class="insight" style="background:#FEE2E2; border-left-color:#DC2626; margin-bottom:18px;">
+      <strong>⚠️ コンテンツ提示ルール（厳守）</strong><br>
+      ✅ <strong>提示OK</strong>: 弊社が独自に分析・作成した汎用コンテンツ（業界知識・市場調査・ポータル比較・公開データ分析・自社サービス資料）<br>
+      ❌ <strong>提示NG</strong>: 顧客固有名を含む提案書／個別契約条件・返金保証等の個別交渉物／顧客提供データに基づく分析レポート／メールアドレス・電話等の個人情報
+    </div>
+
+    <table class="mapping-table">
+      <thead>
+        <tr><th>フェーズ</th><th>フック種別</th><th>既存資産（外部提示可）</th><th>用途</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="role" rowspan="3">Phase 1<br>無料エントリー</td>
+          <td>教育コンテンツ</td>
+          <td><code>ふるさと納税基礎知識_簡易版.pdf</code></td>
+          <td>LP・LINE登録特典として配布（リードマグネット）</td>
+        </tr>
+        <tr>
+          <td>LP本体</td>
+          <td><code>CMO_marketing/furulead_lp/index.html</code></td>
+          <td>SNS・広告から流入させる入口</td>
+        </tr>
+        <tr>
+          <td>診断フォーム</td>
+          <td><code>speed-form.html</code>（LIFF対応）</td>
+          <td>5問診断 → 興味付け版PDF配信</td>
+        </tr>
+
+        <tr>
+          <td class="role" rowspan="4">Phase 2<br>SPEED会員</td>
+          <td>教育コンテンツ</td>
+          <td><code>ふるさと納税基礎知識_詳細版.pdf</code></td>
+          <td>会員限定・継続コンテンツとして月次配信</td>
+        </tr>
+        <tr>
+          <td>市場ランキング調査</td>
+          <td><code>furusato_tax_multi_mall_research.md</code><br>カテゴリ別マーケット推移分析</td>
+          <td>不特定多数のポータルサイト横断調査・SPEED Standard向け詳細分析</td>
+        </tr>
+        <tr>
+          <td>業界レポート</td>
+          <td><code>地域活性化起業人_R6_分析レポート</code></td>
+          <td>公開データ（総務省R6調査）に基づく業界動向レポート</td>
+        </tr>
+        <tr>
+          <td>仲介サービス比較</td>
+          <td><code>furusato_nouzei_intermediary_report.html</code></td>
+          <td>ふるさと納税仲介市場の俯瞰レポート（業界知識として配信）</td>
+        </tr>
+
+        <tr>
+          <td class="role" rowspan="3">Phase 3<br>一次営業</td>
+          <td>営業メイン資料</td>
+          <td><strong><code>ふるりーど_営業プレゼン資料_ver.2.5</code></strong></td>
+          <td>商談時に使う公式資料（料金体系・公開可能な実績含む）</td>
+        </tr>
+        <tr>
+          <td>カテゴリ実績</td>
+          <td>営業プレゼン資料の事例ページ<br>（自治体A/B/C・カテゴリ別 寄付額推移）</td>
+          <td>業種マッチで事業者の心を掴む（事業者名は伏せて掲載）</td>
+        </tr>
+        <tr>
+          <td>サービス設計書</td>
+          <td><code>20260426_FBふるさと納税支援サービスv2.1_設計書</code></td>
+          <td>サービス提供範囲・運用体制の説明</td>
+        </tr>
+
+        <tr>
+          <td class="role" rowspan="3">Phase 4<br>契約・運用</td>
+          <td>内部料金表（社内）</td>
+          <td><code>内部向け料金表_ふるりーど.pdf</code></td>
+          <td><strong>社内のみ</strong>稟議・契約交渉用</td>
+        </tr>
+        <tr>
+          <td>サービス設計書（社内）</td>
+          <td><code>v1.0 / v2.0 / v2.1 設計書</code></td>
+          <td><strong>社内のみ</strong>運用フロー・体制の社内共有</td>
+        </tr>
+        <tr>
+          <td>運用ツール（社内）</td>
+          <td><code>ふるさと納税競合調査システム_マニュアル</code></td>
+          <td><strong>社内のみ</strong>顧客運用時のリサーチ標準化</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="insight" style="background:var(--blue-light); border-left-color:var(--blue);">
+      <strong>💡 活用の優先度</strong><br>
+      ① 営業プレゼン資料 v2.5 をPhase 3で即活用 → ② ふるさと納税基礎知識をPhase 1のLINE登録特典として実装 → ③ ポータル比較・業界レポートをSPEED会員向け月次配信コンテンツとして整備
+    </div>
+
+    <div class="insight" style="background:var(--amber-light); border-left-color:var(--amber); margin-top:14px;">
+      <strong>📝 補足：顧客固有資料の扱い</strong><br>
+      過去に作成した顧客個別の提案書・分析レポート（顧客固有名・契約条件・返金保証提案等を含むもの）は外部提示NG。社内ナレッジとしては保管し、新規提案を作る際の<strong>テンプレート参照</strong>としてのみ活用。共有時は事業者名・固有条件を匿名化し、汎用化した形で再制作してから提示。
+    </div>
+  </div>
+
+  <!-- 統一化アクション -->
+  <div class="section">
+    <h2>このマップを実装するために必要なアクション</h2>
+    <table class="mapping-table">
+      <thead>
+        <tr><th>領域</th><th>アクション</th><th>担当</th><th>優先度</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="role">公式LINE Bot</td>
+          <td>簡易5問のみに絞る（詳細15問は廃止）／選択肢を本体と統一</td>
+          <td>CDO</td>
+          <td>高</td>
+        </tr>
+        <tr>
+          <td class="role">SPEED会員機能</td>
+          <td>Stripe決済連携 / 会員管理DB / 月次自動レポート配信機能の構築</td>
+          <td>CDO</td>
+          <td>中</td>
+        </tr>
+        <tr>
+          <td class="role">プラン定義</td>
+          <td><code>data/plans.yaml</code> 更新済（SPEED Light/Standard、シルバー/ゴールド/プラチナ正式料金 + 成果報酬）</td>
+          <td>CDO + CSO</td>
+          <td>✅完了</td>
+        </tr>
+        <tr>
+          <td class="role">LP制作</td>
+          <td>無料診断 → SPEED → コンサルの引き上げ動線をLPで明示</td>
+          <td>CMO</td>
+          <td>高</td>
+        </tr>
+        <tr>
+          <td class="role">コンテンツ</td>
+          <td>SPEED会員向け継続コンテンツ（月1記事・動画・診断）の体制構築</td>
+          <td>CMO</td>
+          <td>中</td>
+        </tr>
+        <tr>
+          <td class="role">価格戦略</td>
+          <td>SPEEDの正式料金確定（¥4,980 / ¥9,800）／プラン別収支シミュレーション</td>
+          <td>CSO + CFO</td>
+          <td>高</td>
+        </tr>
+        <tr>
+          <td class="role">サロン運営</td>
+          <td>オンラインサロン基盤（Slack / Discord / LINE OpenChat）選定</td>
+          <td>CMO + CDO</td>
+          <td>低</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    FutureBright株式会社 / ふるりーど サービスポジショニング全体マップ v1.0 / 2026-05-07
+  </footer>
+</div>
+</body>
+</html>

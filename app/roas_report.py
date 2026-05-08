@@ -6,10 +6,17 @@ from datetime import datetime
 from pathlib import Path
 from typing import Tuple
 
+import yaml
+
 from app import roas_analyzer, roas_charts, report_generator
 
 _BASE = Path(__file__).resolve().parent.parent
-_TEMPLATE = _BASE / "templates" / "template_roas.md"
+_TEMPLATES = {
+    "internal": _BASE / "templates" / "template_roas.md",
+    "lead": _BASE / "templates" / "template_roas_lead.md",
+    "sales": _BASE / "templates" / "template_roas_sales.md",
+}
+_PLANS_PATH = _BASE / "data" / "plans.yaml"
 _OUTPUT_DIR = _BASE / "data" / "generated_reports"
 _OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -88,6 +95,56 @@ def _plan_comparison_table(comparison: dict) -> str:
     return "\n".join(rows)
 
 
+def _load_plans() -> dict:
+    try:
+        with open(_PLANS_PATH, encoding="utf-8") as f:
+            return yaml.safe_load(f).get("plans", {}) or {}
+    except Exception:
+        return {}
+
+
+def _plan_profit_table(annual_donation_yen: float, producer_share_rate: float) -> str:
+    """各コンサルプランで事業者の手元に残る金額を試算したMarkdownテーブル。
+
+    手元残金 = 年間寄付額 × 事業者取り分率
+              - (月額×12 + 初期費用)
+              - 年間寄付額 × 成果報酬率
+
+    SPEED系（自走支援）はコンサル契約とは別建てなので除外。
+    """
+    plans = _load_plans()
+    if not plans:
+        return "（プランデータが見つかりません）"
+
+    consult_plans = {k: p for k, p in plans.items() if p.get("category") == "consult"}
+    if not consult_plans:
+        return "（コンサルプランデータが見つかりません）"
+
+    rows = [
+        "| プラン | 月額 | 初期費用 | 成果報酬 | 想定寄付額 | 事業者取り分 | ふるりーど料金合計(年) | **手元残金(年)** |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for key, p in consult_plans.items():
+        monthly = int(p.get("monthly_fee", 0))
+        setup = int(p.get("setup_fee", 0))
+        success_pct = float(p.get("success_fee_pct", 0))
+        success_fee = annual_donation_yen * (success_pct / 100.0)
+        annual_furulead_fee = monthly * 12 + setup + success_fee
+        producer_share = annual_donation_yen * producer_share_rate
+        net = producer_share - annual_furulead_fee
+        rows.append(
+            f"| **{p.get('name', key)}**（{p.get('plan_subtitle', '')}） "
+            f"| {_yen(monthly)}円/月 "
+            f"| {_yen(setup)}円 "
+            f"| {success_pct:.0f}% "
+            f"| {_yen(annual_donation_yen)}円 "
+            f"| {_yen(producer_share)}円 "
+            f"| {_yen(annual_furulead_fee)}円 "
+            f"| **{_yen(net)}円** |"
+        )
+    return "\n".join(rows)
+
+
 def _render(template: str, ctx: dict) -> str:
     out = template
     for k, v in ctx.items():
@@ -117,6 +174,13 @@ def _build_md_context(form: dict, analysis: dict, chart_paths: dict,
             break
 
     usage = usage or {}
+
+    # プラン別手元残金計算用：事業者取り分率 = 1 - プラットフォーム手数料率 - 制作・配送コスト率
+    platform_fee_rate = float(roas.get("platform_fee_rate", 0) or 0)
+    production_cost_rate = float(roas.get("production_cost_rate", 0) or 0)
+    producer_share_rate = max(0.0, 1.0 - platform_fee_rate - production_cost_rate)
+    annual_donation_yen = float(mod.get("year1", 0) or 0)
+    plan_profit_table = _plan_profit_table(annual_donation_yen, producer_share_rate)
 
     return {
         "business_name": form.get("business_name", "—"),
@@ -156,6 +220,8 @@ def _build_md_context(form: dict, analysis: dict, chart_paths: dict,
         "recommended_plan_revenue_man": _man(expected_year1_revenue),
         "plan_rationale": plan.get("rationale", "—"),
         "plan_comparison_table": _plan_comparison_table(plan.get("comparison", {})),
+        "plan_profit_table": plan_profit_table,
+        "producer_share_pct": f"{producer_share_rate * 100:.1f}",
         "next_actions_list": _bullets(analysis.get("next_actions", [])),
         "usage_model": usage.get("model", "—"),
         "usage_input_tokens": f"{usage.get('input_tokens', 0):,}",
@@ -168,16 +234,23 @@ def _build_md_context(form: dict, analysis: dict, chart_paths: dict,
     }
 
 
-def generate(form: dict) -> Tuple[str, str, dict, dict]:
+def generate(form: dict, mode: str = "internal") -> Tuple[str, str, dict, dict]:
     """事業者情報フォーム → AI分析 → MD → PDF を生成。
+
+    Args:
+        form: 事業者情報フォーム
+        mode: "internal"(社内全項目) / "lead"(興味付け版) / "sales"(一次営業版)
 
     Returns:
         md_path, pdf_path, analysis(JSON), usage(消費トークン・コスト)
     """
+    if mode not in _TEMPLATES:
+        raise ValueError(f"unknown mode: {mode}. choose from {list(_TEMPLATES)}")
+
     analysis, usage = roas_analyzer.analyze(form)
 
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    base_name = f"roas_{_safe_name(form.get('business_name', 'session'))}_{stamp}"
+    base_name = f"roas_{mode}_{_safe_name(form.get('business_name', 'session'))}_{stamp}"
     work_dir = _OUTPUT_DIR / base_name
     work_dir.mkdir(parents=True, exist_ok=True)
 
@@ -185,7 +258,7 @@ def generate(form: dict) -> Tuple[str, str, dict, dict]:
         analysis, form.get("business_name", "事業者"), str(work_dir)
     )
 
-    with open(_TEMPLATE, encoding="utf-8") as f:
+    with open(_TEMPLATES[mode], encoding="utf-8") as f:
         template = f.read()
     ctx = _build_md_context(form, analysis, chart_paths, usage)
     md_text = _render(template, ctx)
@@ -193,9 +266,39 @@ def generate(form: dict) -> Tuple[str, str, dict, dict]:
     md_path = work_dir / f"{base_name}.md"
     md_path.write_text(md_text, encoding="utf-8")
 
-    # チャート画像をmd_pathの隣に置いてあるので、build_pdf相対参照で動く
     pdf_path = _build_pdf_with_images(str(md_path), chart_paths)
     return str(md_path), pdf_path, analysis, usage
+
+
+def generate_with_existing_analysis(
+    form: dict, analysis: dict, usage: dict, mode: str
+) -> Tuple[str, str]:
+    """既存の分析結果を使って別modeのレポートを再生成（AI再呼び出しなし）。
+
+    Returns: md_path, pdf_path
+    """
+    if mode not in _TEMPLATES:
+        raise ValueError(f"unknown mode: {mode}")
+
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    base_name = f"roas_{mode}_{_safe_name(form.get('business_name', 'session'))}_{stamp}"
+    work_dir = _OUTPUT_DIR / base_name
+    work_dir.mkdir(parents=True, exist_ok=True)
+
+    chart_paths = roas_charts.generate_all(
+        analysis, form.get("business_name", "事業者"), str(work_dir)
+    )
+
+    with open(_TEMPLATES[mode], encoding="utf-8") as f:
+        template = f.read()
+    ctx = _build_md_context(form, analysis, chart_paths, usage or {})
+    md_text = _render(template, ctx)
+
+    md_path = work_dir / f"{base_name}.md"
+    md_path.write_text(md_text, encoding="utf-8")
+
+    pdf_path = _build_pdf_with_images(str(md_path), chart_paths)
+    return str(md_path), pdf_path
 
 
 def _build_pdf_with_images(md_path: str, chart_paths: dict) -> str:

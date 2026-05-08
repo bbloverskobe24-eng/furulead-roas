@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ふるりーどSPEED 管理画面 Streamlit Cloud デプロイ手順</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --blue: #2563EB;
+    --blue-dark: #1E40AF;
+    --blue-light: #EFF6FF;
+    --blue-mid: #DBEAFE;
+    --blue-soft: #F5F9FF;
+    --text: #0F172A;
+    --text-sub: #475569;
+    --border: #DBEAFE;
+    --green: #059669;
+    --green-light: #D1FAE5;
+    --amber: #D97706;
+    --amber-light: #FEF3C7;
+    --red: #DC2626;
+    --red-light: #FEE2E2;
+  }
+  body {
+    font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    background: var(--blue-soft);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 24px 16px;
+  }
+  .container { max-width: 880px; margin: 0 auto; }
+  header {
+    background: white;
+    border-radius: 14px;
+    padding: 28px 28px 24px;
+    margin-bottom: 20px;
+    border-left: 6px solid var(--blue);
+    box-shadow: 0 2px 8px rgba(37,99,235,0.06);
+  }
+  header h1 {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--blue-dark);
+    margin-bottom: 6px;
+  }
+  header .meta {
+    font-size: 12px;
+    color: var(--text-sub);
+  }
+  .checklist {
+    background: white;
+    border-radius: 14px;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+  }
+  .checklist h3 {
+    font-size: 14px;
+    color: var(--blue-dark);
+    margin-bottom: 10px;
+  }
+  .checklist label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .checklist input { margin-top: 4px; accent-color: var(--blue); }
+  .step {
+    background: white;
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 6px rgba(37,99,235,0.04);
+  }
+  .step-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .step-num {
+    width: 32px; height: 32px;
+    background: var(--blue);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .step-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--blue-dark);
+  }
+  .step-time {
+    margin-left: auto;
+    font-size: 11px;
+    background: var(--blue-light);
+    color: var(--blue-dark);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+  }
+  .step-body p {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  .step-body ol, .step-body ul {
+    padding-left: 22px;
+    margin-bottom: 12px;
+    font-size: 14px;
+  }
+  .step-body li { margin-bottom: 6px; }
+  pre {
+    background: #0F172A;
+    color: #E2E8F0;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    overflow-x: auto;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    margin: 8px 0 12px;
+    line-height: 1.5;
+  }
+  pre.toml { background: #1E293B; }
+  code.inline {
+    background: var(--blue-light);
+    color: var(--blue-dark);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    font-family: 'Menlo', monospace;
+    font-weight: 600;
+  }
+  .copy-btn {
+    display: inline-block;
+    background: var(--blue);
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 8px;
+    font-family: inherit;
+  }
+  .copy-btn:hover { background: var(--blue-dark); }
+  .copy-btn.copied { background: var(--green); }
+  .note {
+    background: var(--blue-light);
+    border-left: 4px solid var(--blue);
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin: 10px 0;
+  }
+  .warn {
+    background: var(--amber-light);
+    border-left: 4px solid var(--amber);
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin: 10px 0;
+  }
+  .danger {
+    background: var(--red-light);
+    border-left: 4px solid var(--red);
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin: 10px 0;
+  }
+  .label-key { font-weight: 700; color: var(--blue-dark); }
+  .field-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 13px;
+  }
+  .field-table th, .field-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+  .field-table th {
+    background: var(--blue-light);
+    color: var(--blue-dark);
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .field-table td:first-child {
+    font-family: 'Menlo', monospace;
+    font-weight: 600;
+    color: var(--blue);
+    font-size: 12px;
+  }
+  a {
+    color: var(--blue);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  a:hover { text-decoration: underline; }
+  .pill {
+    display: inline-block;
+    background: var(--green-light);
+    color: var(--green);
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 6px;
+  }
+  .pill-warn { background: var(--amber-light); color: var(--amber); }
+  footer {
+    text-align: center;
+    color: var(--text-sub);
+    font-size: 11px;
+    padding: 20px 0;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>ふるりーどSPEED 管理画面 デプロイ手順</h1>
+    <div class="meta">Streamlit Community Cloud（無料）／ 想定所要時間: 10〜15分 ／ 2026-05-05</div>
+  </header>
+
+  <div class="checklist">
+    <h3>事前確認</h3>
+    <label><input type="checkbox"> GitHubアカウント <code class="inline">bbloverskobe24-eng</code> でログイン可能</label>
+    <label><input type="checkbox"> リポジトリ <code class="inline">bbloverskobe24-eng/furulead-roas</code> が <strong>Public</strong>（無料プランの条件）</label>
+    <label><input type="checkbox"> ローカル <code class="inline">.env</code> に <code class="inline">ANTHROPIC_API_KEY</code> が設定済み</label>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">1</div>
+      <div class="step-title">ローカルの値を確認</div>
+      <div class="step-time">2分</div>
+    </div>
+    <div class="step-body">
+      <p>ターミナルで以下を実行し、メモ帳などに値を控える。</p>
+      <button class="copy-btn" data-copy="cmd1">コピー</button>
+      <pre id="cmd1">grep ANTHROPIC_API_KEY ~/projects/claude_taira/CDO_tech/ai_agents/furulead_speed_bot/.env</pre>
+      <p>続いて、管理画面ログイン用の <span class="label-key">ADMIN_PASS</span> を生成。</p>
+      <button class="copy-btn" data-copy="cmd2">コピー</button>
+      <pre id="cmd2">openssl rand -base64 18</pre>
+      <div class="note">
+        <strong>メモする値（5つ）</strong><br>
+        ① <code class="inline">ANTHROPIC_API_KEY</code>（grepで確認した sk-ant-... の値）<br>
+        ② <code class="inline">ADMIN_PASS</code>（opensslで生成した値）<br>
+        ③〜⑤は固定値なので下のStep 4ブロックをそのまま使ってOK
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">2</div>
+      <div class="step-title">Streamlit Cloud にログイン</div>
+      <div class="step-time">1分</div>
+    </div>
+    <div class="step-body">
+      <p>
+        <a href="https://share.streamlit.io/" target="_blank">https://share.streamlit.io/</a> を開き、
+        <strong>「Sign in with GitHub」</strong> から <code class="inline">bbloverskobe24-eng</code> アカウントでログイン。
+      </p>
+      <p>初回はGitHubの権限承認画面が出るので「Authorize」を押す。</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">3</div>
+      <div class="step-title">新規アプリを作成</div>
+      <div class="step-time">2分</div>
+    </div>
+    <div class="step-body">
+      <p>右上 <strong>「Create app」</strong> または <strong>「New app」</strong> をクリック。「Deploy a public app from GitHub」を選択。</p>
+      <table class="field-table">
+        <thead><tr><th>入力欄</th><th>設定値</th></tr></thead>
+        <tbody>
+          <tr><td>Repository</td><td>bbloverskobe24-eng/furulead-roas</td></tr>
+          <tr><td>Branch</td><td>main</td></tr>
+          <tr><td>Main file path</td><td>streamlit_app.py</td></tr>
+          <tr><td>App URL（任意）</td><td>furulead-roas など分かりやすい名前</td></tr>
+        </tbody>
+      </table>
+      <div class="warn">
+        <strong>※ Repository欄でリポが見つからない場合</strong><br>
+        Streamlit Cloud画面右上のアカウントアイコン → 「Workspace settings」 → 「GitHub」 → 「Edit GitHub permissions」 から、対象リポへのアクセスを許可。
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">4</div>
+      <div class="step-title">Advanced settings で Secrets を設定</div>
+      <div class="step-time">3分</div>
+    </div>
+    <div class="step-body">
+      <p>「Advanced settings」を開く。</p>
+      <ul>
+        <li><strong>Python version</strong>: <code class="inline">3.11</code></li>
+        <li><strong>Secrets</strong>: 下のテンプレを貼り付け、①と②を実値に書き換える</li>
+      </ul>
+      <button class="copy-btn" data-copy="secrets">コピー</button>
+<pre class="toml" id="secrets">ANTHROPIC_API_KEY = "ここにStep1①の値（sk-ant-...）"
+ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
+ADMIN_PASS = "ここにStep1②の値"
+CHATWORK_API_TOKEN = "ローカル.envの CHATWORK_API_TOKEN を貼り付け"
+CHATWORK_ROOM_ID = "326433964"</pre>
+      <div class="danger">
+        <strong>⚠️ シークレットの取扱い</strong><br>
+        Secrets欄に入力した値はStreamlit Cloudが暗号化して保管します。コードリポジトリには絶対にコミットしない（<code class="inline">.gitignore</code>で <code class="inline">.streamlit/secrets.toml</code> 除外済）。
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">5</div>
+      <div class="step-title">Deploy 実行</div>
+      <div class="step-time">3〜5分</div>
+    </div>
+    <div class="step-body">
+      <p>下部の <strong>「Deploy」</strong> ボタンを押す。ビルドログがリアルタイム表示される。</p>
+      <p>ビルド成功すると、URL（例: <code class="inline">https://furulead-roas.streamlit.app</code>）が発行される。</p>
+      <div class="warn">
+        <strong>初回ビルドで <code class="inline">ModuleNotFoundError</code> が出た場合</strong><br>
+        <code class="inline">requirements.txt</code> がリポジトリのルートにあるかStreamlit Cloud側のキャッシュ設定で「Reboot app」して再試行。
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">6</div>
+      <div class="step-title">動作確認</div>
+      <div class="step-time">3分</div>
+      <span class="pill">最終チェック</span>
+    </div>
+    <div class="step-body">
+      <p>発行されたURLを開き、以下を確認。</p>
+      <ul>
+        <li>パスワード入力画面 → <strong>ADMIN_PASS</strong> でログイン</li>
+        <li>サイドバーまたはタブ <strong>「🎯 ROAS分析」</strong> を選択</li>
+        <li>事業者情報を仮で入力 → <strong>「分析実行」</strong></li>
+        <li>レーダーチャート / 売上予測 / 推奨プランが表示</li>
+        <li>PDFダウンロードボタンが動く</li>
+      </ul>
+      <div class="note">
+        <strong>うまく動いたら</strong>: 発行URLとADMIN_PASSをChatworkメモに保存。商談中はこのURLを開いて使う。
+      </div>
+    </div>
+  </div>
+
+  <div class="step" style="background:linear-gradient(180deg,white,var(--blue-soft));">
+    <div class="step-head">
+      <div class="step-num" style="background:var(--green);">✓</div>
+      <div class="step-title" style="color:var(--green);">完了後にやること</div>
+    </div>
+    <div class="step-body">
+      <ul>
+        <li>URLとADMIN_PASSをChatworkマイチャットにメモ（<code class="inline">326433964</code>）</li>
+        <li>このHTMLは閉じてOK</li>
+        <li>うまくいかない箇所があれば、エラーメッセージを共有してください — 一緒に対応します</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    FutureBright株式会社 / ふるりーどSPEED 管理画面デプロイガイド v1.0
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const target = document.getElementById(btn.dataset.copy);
+      try {
+        await navigator.clipboard.writeText(target.textContent);
+        const orig = btn.textContent;
+        btn.textContent = '✓ コピー済';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = orig;
+          btn.classList.remove('copied');
+        }, 1500);
+      } catch (e) {
+        alert('コピーに失敗しました。手動で選択してコピーしてください。');
+      }
+    });
+  });
+</script>
+</body>
+</html>

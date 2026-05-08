@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ふるりーどSPEED 全体ワークフロー（統一版）</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --blue: #2563EB;
+    --blue-dark: #1E40AF;
+    --blue-light: #EFF6FF;
+    --blue-mid: #DBEAFE;
+    --blue-soft: #F5F9FF;
+    --text: #0F172A;
+    --text-sub: #475569;
+    --border: #DBEAFE;
+    --green: #059669;
+    --green-light: #D1FAE5;
+    --amber: #D97706;
+    --amber-light: #FEF3C7;
+    --purple: #7C3AED;
+    --purple-light: #EDE9FE;
+    --pink: #DB2777;
+    --pink-light: #FCE7F3;
+  }
+  body {
+    font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    background: var(--blue-soft);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 24px 16px;
+  }
+  .container { max-width: 1080px; margin: 0 auto; }
+  header {
+    background: white;
+    border-radius: 14px;
+    padding: 28px 28px 24px;
+    margin-bottom: 24px;
+    border-left: 6px solid var(--blue);
+    box-shadow: 0 2px 8px rgba(37,99,235,0.06);
+  }
+  header h1 {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--blue-dark);
+    margin-bottom: 6px;
+  }
+  header .meta {
+    font-size: 12px;
+    color: var(--text-sub);
+  }
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding: 14px 18px;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+  .phase {
+    background: white;
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 6px rgba(37,99,235,0.04);
+  }
+  .phase-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--blue-light);
+  }
+  .phase-num {
+    width: 44px; height: 44px;
+    background: var(--blue);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .phase-title { font-size: 19px; font-weight: 800; color: var(--blue-dark); }
+  .phase-sub { font-size: 12px; color: var(--text-sub); margin-top: 3px; }
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 100px 1fr 200px;
+    gap: 16px;
+    align-items: stretch;
+    background: var(--blue-soft);
+    border-radius: 10px;
+    padding: 16px 18px;
+    border-left: 4px solid var(--blue);
+  }
+  .step.line { border-left-color: #06C755; background: #F0FDF4; }
+  .step.email { border-left-color: var(--purple); background: var(--purple-light); }
+  .step.internal { border-left-color: var(--amber); background: var(--amber-light); }
+  .step.client { border-left-color: var(--pink); background: var(--pink-light); }
+  .step.output { border-left-color: var(--green); background: var(--green-light); }
+  .step-actor {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-sub);
+    align-self: center;
+    text-align: center;
+    padding: 6px 4px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .step-body { font-size: 13.5px; line-height: 1.6; }
+  .step-body strong { color: var(--blue-dark); display: block; margin-bottom: 4px; font-size: 14px; }
+  .step-body small { display: block; color: var(--text-sub); margin-top: 4px; font-size: 11.5px; }
+  .step-tool {
+    font-size: 11px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    text-align: center;
+    align-self: center;
+    color: var(--text-sub);
+    font-weight: 600;
+  }
+  .arrow {
+    text-align: center;
+    color: var(--text-sub);
+    font-size: 18px;
+    margin: -2px 0;
+  }
+  .branch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 12px 0;
+  }
+  .branch-box {
+    background: white;
+    border-radius: 10px;
+    padding: 14px 16px;
+    border: 2px dashed var(--border);
+  }
+  .branch-box h4 {
+    font-size: 13px;
+    color: var(--blue-dark);
+    margin-bottom: 6px;
+  }
+  .branch-box p { font-size: 12px; color: var(--text-sub); }
+  .pdf-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .pdf-card {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    border-top: 3px solid var(--blue);
+    font-size: 12px;
+  }
+  .pdf-card.lead { border-top-color: var(--green); }
+  .pdf-card.sales { border-top-color: var(--amber); }
+  .pdf-card.internal { border-top-color: var(--purple); }
+  .pdf-card h5 { font-size: 13px; margin-bottom: 6px; color: var(--blue-dark); font-weight: 800; }
+  .pdf-card p { color: var(--text-sub); font-size: 11px; line-height: 1.5; margin-bottom: 4px; }
+  .pdf-card ul { font-size: 10.5px; color: var(--text-sub); padding-left: 14px; line-height: 1.45; }
+  .gap-section {
+    background: var(--amber-light);
+    border-left: 6px solid var(--amber);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 24px;
+  }
+  .gap-section h2 {
+    font-size: 17px;
+    color: var(--amber);
+    margin-bottom: 10px;
+  }
+  .gap-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 12.5px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .gap-table th, .gap-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .gap-table th {
+    background: var(--blue-light);
+    color: var(--blue-dark);
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .gap-table tr:last-child td { border-bottom: none; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10.5px;
+    font-weight: 700;
+    margin-left: 4px;
+  }
+  .badge-keep { background: var(--green-light); color: var(--green); }
+  .badge-fix { background: var(--amber-light); color: var(--amber); }
+  .badge-add { background: var(--purple-light); color: var(--purple); }
+  .badge-drop { background: #FEE2E2; color: #DC2626; }
+  footer {
+    text-align: center;
+    color: var(--text-sub);
+    font-size: 11px;
+    padding: 20px 0;
+  }
+  @media (max-width: 760px) {
+    .step { grid-template-columns: 1fr; }
+    .step-actor, .step-tool { text-align: left; }
+    .pdf-grid { grid-template-columns: 1fr; }
+    .branch { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>ふるりーどSPEED 全体ワークフロー（統一版）</h1>
+    <div class="meta">3つのPDF出力 × 3つのフェーズ × 役割分担　／　2026-05-07</div>
+  </header>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot" style="background:#06C755"></span>LINE経由</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--purple)"></span>メール経由</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>弊社内部作業</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--pink)"></span>事業者作業</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>成果物（PDF）</div>
+  </div>
+
+  <!-- Phase 1 -->
+  <div class="phase">
+    <div class="phase-head">
+      <div class="phase-num">1</div>
+      <div>
+        <div class="phase-title">リード獲得・興味付け</div>
+        <div class="phase-sub">公式LINE → 5問回答 → 興味付け版PDF自動配信　（自走 / 数分〜数時間で完結）</div>
+      </div>
+    </div>
+    <div class="flow">
+      <div class="step line">
+        <div class="step-actor">事業者</div>
+        <div class="step-body">
+          <strong>LINE「ふるりーどSPEED」を友だち追加</strong>
+          リッチメニュー or LP導線から登録
+          <small>QRコード・LP・SNSキャンペーン経由を想定</small>
+        </div>
+        <div class="step-tool">LINE Messaging API</div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step line">
+        <div class="step-actor">事業者</div>
+        <div class="step-body">
+          <strong>簡易5問に回答（約3分）</strong>
+          ① 事業者名 / ② 所在地 / ③ 商品カテゴリ / ④ 強み・ストーリー / ⑤ メールアドレス
+          <small>充足度バーで進捗を可視化、途中保存OK</small>
+        </div>
+        <div class="step-tool">FastAPI + Firestore</div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step internal">
+        <div class="step-actor">弊社</div>
+        <div class="step-body">
+          <strong>Chatwork通知 → 管理画面で確認</strong>
+          回答完了をリアルタイム通知。担当者が内容をレビュー
+          <small>不備があれば LINE で追加質問</small>
+        </div>
+        <div class="step-tool">Chatwork + Streamlit</div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step internal">
+        <div class="step-actor">弊社</div>
+        <div class="step-body">
+          <strong>AI分析実行（Claude Haiku）</strong>
+          回答データをもとに参入適性スコア・売上予測・商品提案を生成
+          <small>30〜60秒で分析完了</small>
+        </div>
+        <div class="step-tool">Anthropic API</div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step output">
+        <div class="step-actor">成果物</div>
+        <div class="step-body">
+          <strong>🎯 興味付け版PDF を生成 → メール / LINE で配信</strong>
+          <small>※ コスト・プラン詳細・ROAS試算は<u>含まない</u>。事業者の興味喚起に特化</small>
+        </div>
+        <div class="step-tool">PDF (reportlab)</div>
+      </div>
+    </div>
+    <div class="branch">
+      <div class="branch-box">
+        <h4>✅ 興味あり → Phase 2 へ</h4>
+        <p>事業者が興味を示した場合、ヒアリングシートを送付し詳細情報を収集</p>
+      </div>
+      <div class="branch-box">
+        <h4>⏸️ 反応なし → ナーチャリング</h4>
+        <p>LINEで定期的な情報配信。3ヶ月後に再アプローチ</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="phase">
+    <div class="phase-head">
+      <div class="phase-num">2</div>
+      <div>
+        <div class="phase-title">一次営業（商談準備・提案）</div>
+        <div class="phase-sub">ヒアリングシート → 詳細情報収集 → 一次営業版PDFで商談　（数日〜2週間）</div>
+      </div>
+    </div>
+    <div class="flow">
+      <div class="step email">
+        <div class="step-actor">弊社</div>
+        <div class="step-body">
+          <strong>ヒアリングシートをメール送付</strong>
+          <code>templates/hearing_template.md</code> を Word/PDF化して添付
+          <small>記入所要時間: 約10〜15分（事業者向け）</small>
+        </div>
+        <div class="step-tool">Gmail / Outlook</div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step client">
+        <div class="step-actor">事業者</div>
+        <div class="step-body">
+          <strong>ヒアリングシート記入 → 返送</strong>
+          基本情報 / 規模 / 主力商品（複数）/ ストーリー / 予算 / 連絡先
+          <small>記入返送はメール添付・印刷スキャンどちらでも</small>
+        </div>
+        <div class="step-tool">Email</div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step internal">
+        <div class="step-actor">弊社</div>
+        <div class="step-body">
+          <strong>管理画面 ROAS分析タブに転記</strong>
+          ヒアリング内容を入力フォームに転記して「AI分析実行」ボタン
+          <small>所要時間: 5〜10分（転記 + 分析待ち）</small>
+        </div>
+        <div class="step-tool">Streamlit 管理画面</div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step output">
+        <div class="step-actor">成果物</div>
+        <div class="step-body">
+          <strong>💼 一次営業版PDF を生成</strong>
+          ROAS試算 + プラン別「手元残金」シミュレーション付き
+          <small>※ シルバー（初期30万・月3万・成果報酬20%）／ゴールド（初期50万・月5万・成果報酬10%）／プラチナ（初期100万・月10万・成果報酬5%）各プランで「年間でいくら残るか」を可視化</small>
+        </div>
+        <div class="step-tool">PDF (reportlab)</div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step internal">
+        <div class="step-actor">弊社</div>
+        <div class="step-body">
+          <strong>商談実施（オンライン or 対面）</strong>
+          一次営業版PDFを画面共有 or 紙で提示しながら説明
+          <small>担当者がROAS・プラン詳細を口頭で補足</small>
+        </div>
+        <div class="step-tool">Zoom / 訪問</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="phase">
+    <div class="phase-head">
+      <div class="phase-num">3</div>
+      <div>
+        <div class="phase-title">クロージング・契約・運用開始</div>
+        <div class="phase-sub">社内全項目版で契約交渉のエビデンス整備　（成約後の運用引継ぎ）</div>
+      </div>
+    </div>
+    <div class="flow">
+      <div class="step internal">
+        <div class="step-actor">弊社</div>
+        <div class="step-body">
+          <strong>社内全項目版PDFで契約準備</strong>
+          AI分析の根拠・トークン使用量・コスト全部入りの内部資料
+          <small>稟議・契約書添付・運用引継ぎに利用</small>
+        </div>
+        <div class="step-tool">Streamlit 管理画面</div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step client">
+        <div class="step-actor">事業者</div>
+        <div class="step-body">
+          <strong>契約締結 → プラン適用</strong>
+          シルバー / ゴールド / プラチナ から選択。月額 + 初期費用で運用開始
+        </div>
+        <div class="step-tool">電子契約</div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="step output">
+        <div class="step-actor">成果物</div>
+        <div class="step-body">
+          <strong>📊 ふるさと納税参入・運用フェーズへ</strong>
+          自治体マッチング / 商品撮影 / ポータル掲載 / 月次レポート
+        </div>
+        <div class="step-tool">運用支援</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3つのPDFまとめ -->
+  <div class="phase">
+    <div class="phase-head">
+      <div class="phase-num" style="background:var(--green);">📄</div>
+      <div>
+        <div class="phase-title">3つのPDFの使い分け</div>
+        <div class="phase-sub">同じAI分析結果から、フェーズ別に異なるPDFを出力</div>
+      </div>
+    </div>
+    <div class="pdf-grid">
+      <div class="pdf-card lead">
+        <h5>🎯 興味付け版</h5>
+        <p>Phase 1 で事業者に提供。興味を持ってもらうための「持ち帰り資料」</p>
+        <ul>
+          <li>強み・適性</li>
+          <li>市場ベンチマーク</li>
+          <li>売上見込み（3シナリオ）</li>
+          <li>商品ラインナップ提案</li>
+          <li><s>ROAS試算</s> 含まない</li>
+          <li><s>プラン料金</s> 含まない</li>
+        </ul>
+      </div>
+      <div class="pdf-card sales">
+        <h5>💼 一次営業版</h5>
+        <p>Phase 2 で商談時に提示。プラン選定のための「判断材料」</p>
+        <ul>
+          <li>興味付け版の全内容</li>
+          <li><strong>ROAS試算</strong></li>
+          <li><strong>プラン別手元残金シミュレーション</strong></li>
+          <li>推奨プラン提示</li>
+          <li><s>分析リソース情報</s> 含まない</li>
+        </ul>
+      </div>
+      <div class="pdf-card internal">
+        <h5>📊 社内全項目版</h5>
+        <p>Phase 3 で内部資料として活用。<strong>事業者には渡さない</strong></p>
+        <ul>
+          <li>一次営業版の全内容</li>
+          <li>プラン比較表（適合度）</li>
+          <li><strong>分析リソース（コスト・トークン）</strong></li>
+          <li>AI分析の生データ参照</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ギャップ解消 -->
+  <div class="gap-section">
+    <h2>⚠️ 公式LINE「ふるりーどSPEED」との統一化が必要な箇所</h2>
+    <p style="font-size:13px;color:var(--text-sub);">
+      現状の公式LINEは「簡易5問」「詳細15問」の2コース構成ですが、新動線では役割分担を以下のように整理します。
+    </p>
+    <table class="gap-table">
+      <thead>
+        <tr><th>項目</th><th>現状</th><th>新動線</th><th>対応</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>LINE Bot 簡易5問</td>
+          <td>事業者名/所在地/カテゴリ/強み/メール</td>
+          <td>同左（Phase 1のリード獲得用）</td>
+          <td><span class="badge badge-keep">維持</span></td>
+        </tr>
+        <tr>
+          <td>LINE Bot 詳細15問</td>
+          <td>15項目の質問フロー</td>
+          <td>役割不明確（中途半端）</td>
+          <td><span class="badge badge-drop">廃止</span> または非推奨化</td>
+        </tr>
+        <tr>
+          <td>業種カテゴリの選択肢</td>
+          <td>食品/食品加工/工芸/宿泊・体験/その他</td>
+          <td>食品/工芸/宿泊・体験/その他</td>
+          <td><span class="badge badge-fix">統一</span> シンプル化</td>
+        </tr>
+        <tr>
+          <td>年商レンジの区分</td>
+          <td>7区分（〜50億超まで）</td>
+          <td>5区分（1000万未満〜5億以上）</td>
+          <td><span class="badge badge-fix">統一</span> 管理画面に合わせる</td>
+        </tr>
+        <tr>
+          <td>ふるさと納税ステータス</td>
+          <td>未掲載／掲載中／検討中・準備中</td>
+          <td>未掲載／掲載中／検討中</td>
+          <td><span class="badge badge-fix">統一</span> 表記揃え</td>
+        </tr>
+        <tr>
+          <td>商品情報の収集</td>
+          <td>1商品のみ</td>
+          <td>複数商品（最大10）</td>
+          <td><span class="badge badge-add">ヒアリング側で収集</span></td>
+        </tr>
+        <tr>
+          <td>詳細情報（代表者・従業員数・予算等）</td>
+          <td>収集なし</td>
+          <td>ヒアリングシートで収集</td>
+          <td><span class="badge badge-add">Phase 2で収集</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:var(--text-sub);margin-top:12px;">
+      <strong>方針</strong>: LINE Bot は「リード獲得用の軽量入口」に絞り、詳細情報はヒアリングシート経由で取得することで役割分担を明確化します。
+    </p>
+  </div>
+
+  <footer>
+    FutureBright株式会社 / ふるりーどSPEED 全体ワークフロー設計 v2.0 / 2026-05-07
+  </footer>
+</div>
+</body>
+</html>

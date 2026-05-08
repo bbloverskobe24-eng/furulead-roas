@@ -31,17 +31,17 @@ def _format_question(q: dict, pct: int) -> dict:
 
 
 def on_follow(line_user_id: str, display_name: str = None):
-    """友だち追加時"""
+    """友だち追加時 — v2.0以降は簡易5問のみ（詳細15問は廃止）"""
     storage.upsert_user(line_user_id, display_name)
     return {
         "text": (
             "はじめまして！\n"
             "「ふるりーどSPEED」にご登録ありがとうございます📮\n\n"
             "ふるさと納税への参入を検討されている事業者様向けに、\n"
-            '"あなた専用" の参入予測レポートを【無料】でお作りします。\n\n'
-            "ご希望の診断コースを選んでください👇"
+            '"あなた専用" の参入可能性レポートを【無料】でお作りします。\n\n'
+            "5問・約3分で完了します。下のボタンから始めてください👇"
         ),
-        "quick_reply": ["簡易診断（5問・3分）", "詳細診断（15問・10分）"],
+        "quick_reply": ["診断スタート（5問・3分）"],
     }
 
 
@@ -51,17 +51,25 @@ def on_message(line_user_id: str, text: str, display_name: str = None):
     user = storage.get_user(line_user_id) or {}
     text = (text or "").strip()
 
-    # コース未選択
+    # コース未選択 — v2.0以降は簡易5問のみ。「診断」「スタート」「簡易」を含む or やり直しで自動起動
     if not user.get("course"):
-        if "簡易" in text:
+        # トリガーワード検出（簡易コース起動）
+        if any(k in text for k in ("簡易", "診断", "スタート", "はじめる", "始める")):
             storage.update_user(line_user_id, course="simple", current_q=None, status="in_progress")
             return _send_next_question(line_user_id, "simple", course_start=True, simple=True)
+        # 「詳細」と送られた場合は廃止のため案内
         if "詳細" in text:
-            storage.update_user(line_user_id, course="detailed", current_q=None, status="in_progress")
-            return _send_next_question(line_user_id, "detailed", course_start=True, simple=False)
+            return {
+                "text": (
+                    "詳細診断は廃止されました。\n"
+                    "簡易5問の後、ご希望者には別途ヒアリングシートで詳細情報を伺います。\n\n"
+                    "まずは簡易診断から始めましょう👇"
+                ),
+                "quick_reply": ["診断スタート（5問・3分）"],
+            }
         return {
-            "text": "どちらの診断コースをご希望ですか？👇",
-            "quick_reply": ["簡易診断（5問・3分）", "詳細診断（15問・10分）"],
+            "text": "下のボタンから診断を開始してください👇",
+            "quick_reply": ["診断スタート（5問・3分）"],
         }
 
     course = user["course"]
@@ -72,8 +80,8 @@ def on_message(line_user_id: str, text: str, display_name: str = None):
         storage.update_user(line_user_id, course=None, current_q=None,
                             completeness=0, status="in_progress")
         return {
-            "text": "診断をリセットしました。もう一度コースを選んでください👇",
-            "quick_reply": ["簡易診断（5問・3分）", "詳細診断（15問・10分）"],
+            "text": "診断をリセットしました。下のボタンからもう一度お願いします👇",
+            "quick_reply": ["診断スタート（5問・3分）"],
         }
     if text == "簡易に変更":
         storage.clear_answers(line_user_id)
@@ -81,19 +89,15 @@ def on_message(line_user_id: str, text: str, display_name: str = None):
                             completeness=0, status="in_progress")
         return _send_next_question(line_user_id, "simple", course_start=True, simple=True)
     if text == "詳細に変更":
-        # 簡易コースの回答を詳細コースへ引き継ぐ
-        old_answers = storage.get_answers(line_user_id)
-        storage.clear_answers(line_user_id)
-        for src, dst in SIMPLE_TO_DETAILED_MAP.items():
-            if src in old_answers:
-                storage.save_answer(line_user_id, dst, old_answers[src])
-        # 引継いだ分で充足度を再計算
-        carried = set(SIMPLE_TO_DETAILED_MAP[k] for k in old_answers if k in SIMPLE_TO_DETAILED_MAP)
-        pct = calculate_completeness("detailed", carried)
-        storage.update_user(line_user_id, course="detailed", current_q=None,
-                            completeness=pct, status="in_progress")
-        return _send_next_question(line_user_id, "detailed", course_start=True,
-                                   simple=False, carried=len(carried))
+        # v2.0で廃止。詳細情報はメール経由のヒアリングシートで取得する旨を案内
+        return {
+            "text": (
+                "詳細診断は廃止されました🙏\n"
+                "簡易診断完了後、より詳しい分析をご希望の場合は\n"
+                "弊社からヒアリングシートをメールでお送りいたします。\n\n"
+                "このまま簡易診断を続けてください💪"
+            ),
+        }
 
     # 「N問目修正」コマンド（completedまでは許可、reviewing/delivered/blockedは拒否）
     m_edit = EDIT_RE.match(text)
@@ -238,20 +242,19 @@ def _completion_message(course):
                 "🎉 ご回答ありがとうございました！\n\n"
                 f"📊 情報充足度：{bar} 100%\n\n"
                 "CSO担当が内容を拝見し、\n"
-                "【3営業日以内】に参入予測レポートPDFをお送りします。\n\n"
-                "届くまでしばらくお待ちください✨\n\n"
-                "👉 詳細診断（15問版）に切り替えて、\n"
-                "より本格的なレポートをご希望の場合は\n"
-                "「詳細に変更」と送ってください。"
+                "【3営業日以内】に参入可能性レポート（PDF）をメールでお送りします📮\n\n"
+                "より詳細な事業計画レポート（ROAS試算・プラン別シミュレーション付き）を\n"
+                "ご希望の場合は、弊社からヒアリングシートをメールでお送りいたしますので、\n"
+                "返送いただければ別途分析いたします📊"
             ),
         }
+    # detailed コースは廃止だが、既存セッション互換のため残置
     return {
         "text": (
             "🎉 全問ご回答ありがとうございました！\n\n"
             f"📊 情報充足度：{bar} 100%\n\n"
             "CSO担当が内容を詳細に分析し、\n"
-            "【3営業日以内】に専用レポートをPDFでお送りします。\n\n"
-            "本格的な分析レポート（10〜15ページ）をお楽しみに✨"
+            "【3営業日以内】に専用レポートをPDFでお送りします。"
         ),
     }
 

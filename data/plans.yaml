@@ -1,35 +1,97 @@
-# ふるりーど プラン定義（仮データ — 正式版はCSO提供予定）
+# ふるりーど プラン定義
+# 出典: ふるりーど_営業プレゼン資料_ver.2.5_20260505.pdf
+# 料金は全て税別
+
 plans:
+  # ============================================================
+  # SPEED系（公式LINE有料会員・自走支援）
+  # ============================================================
+  speed_light:
+    name: SPEED Light
+    category: speed
+    monthly_fee: 4980
+    setup_fee: 0
+    success_fee_pct: 0
+    description: 公式LINE有料会員・ライトプラン／自走で参入準備したい事業者向け
+    included:
+      - ふるさと納税適正度スコア診断（月1回）
+      - 5サイトベンチマーク調査レポート（月1回）
+      - AIによる改善提案（自動生成）
+      - オンラインサロン参加（情報閲覧のみ）
+      - LINE会員限定コンテンツ配信
+    target:
+      - 自走で参入準備したい事業者
+      - コンサル不要で情報だけ欲しい層
+      - 年商1,000万円未満の小規模事業者
+    expected_first_year_donation: 1000000
+    expected_first_year_donation_max: 3000000
+
+  speed_standard:
+    name: SPEED Standard
+    category: speed
+    monthly_fee: 9800
+    setup_fee: 0
+    success_fee_pct: 0
+    description: 公式LINE有料会員・スタンダードプラン／継続的に分析活用したい事業者向け
+    included:
+      - ライトの全機能
+      - 適正度スコア診断（月3回）
+      - 商品名・SEOキーワード改善案（AI生成）
+      - 競合上位10商品の詳細分析レポート
+      - オンラインサロン（質問・コメント可）
+      - 月1回グループQ&Aセッション（Zoom）
+    target:
+      - 自走しつつ分析の頻度を増やしたい事業者
+      - 競合詳細分析を必要とする層
+    expected_first_year_donation: 2000000
+    expected_first_year_donation_max: 5000000
+
+  # ============================================================
+  # コンサル系（ふるりーど本体・有人支援）
+  # ============================================================
   silver:
     name: シルバー
-    monthly_fee: 50000
-    setup_fee: 100000
-    description: 参入初期向け／低リスクスタート
+    category: consult
+    plan_subtitle: お試し
+    monthly_fee: 30000
+    setup_fee: 300000
+    success_fee_pct: 20
+    description: 参入初期向け／低リスクスタート（お試しプラン）
     included:
-      - 自治体マッチング（1自治体）
-      - 返礼品撮影アドバイス
-      - 寄付ポータル掲載サポート（1ポータル）
-      - 月次レポート
+      - 自治体申請・登録資料作成
+      - デザイン制作（1商品まで）
+      - 運用改善支援（ページ構成・寄附導線・掲載文面）
+      - SEO最適化支援（検索順位分析・キーワード設計）
+      - 返礼品企画支援（市場リサーチ・価格設計・商品構成）
+      - 既存素材を用いたサムネイル制作（1商品）
+      - 返礼品選定サポート
+      - 掲載申請代行
+      - 自治体調整支援
+      - 月次ミーティング
     target:
       - 年商1億円未満
       - 初参入の事業者
       - 月間供給量200個未満
+      - お試しから始めたい事業者
     expected_first_year_donation: 5000000
     expected_first_year_donation_max: 10000000
 
   gold:
     name: ゴールド
-    monthly_fee: 150000
-    setup_fee: 200000
-    description: 本格運用／複数返礼品・安定供給向け
+    category: consult
+    plan_subtitle: スタンダード
+    monthly_fee: 50000
+    setup_fee: 500000
+    success_fee_pct: 10
+    description: 本格運用／複数返礼品・安定供給向け（スタンダードプラン）
     included:
-      - 自治体マッチング（最大3自治体）
-      - 返礼品撮影＋ECページ制作
-      - 寄付ポータル掲載サポート（3ポータル）
-      - 広告運用支援（月50万円相当の運用代行）
-      - 月次レポート＋戦略MTG
+      - シルバーの全機能
+      - デザイン制作（5商品まで）
+      - 商品送付による物撮り・サムネイル制作（5商品）
+      - レビュー獲得施策の基礎設計
+      - プロモーション設計支援
     target:
-      - 年商1億〜5億円
+      - 年商1〜5億円
       - 本格運用希望
       - 月間供給量500個以上
     expected_first_year_donation: 20000000
@@ -37,20 +99,44 @@ plans:
 
   platinum:
     name: プラチナ
-    monthly_fee: 400000
-    setup_fee: 500000
-    description: トップライン／専属サポート・自治体共同企画
+    category: consult
+    plan_subtitle: フルパッケージ
+    monthly_fee: 100000
+    setup_fee: 1000000
+    success_fee_pct: 5
+    description: トップライン／専属サポート・自治体共同企画（フルパッケージ）
     included:
-      - 自治体マッチング（無制限）
-      - 専属マーケター配置
-      - 全ポータル掲載サポート
-      - 広告運用＋クリエイティブ制作
-      - 自治体共同企画・PRイベント
-      - 週次レポート＋月次戦略MTG
-      - 法務・物流オペレーション支援
+      - ゴールドの全機能
+      - デザイン制作（10商品まで）
+      - 現地撮影（工房・カフェ等）・動画編集・サムネイル（10商品）
+      - レビュー獲得施策の基礎設計
+      - Instagram支援（FORORU・フォロワー150人確保/月）
+      - キャンペーン設計
+      - テレビ連動プロモーション
+      - データ分析レポート
     target:
       - 年商5億円以上
       - 全国展開希望
       - 月間供給量1000個以上
     expected_first_year_donation: 80000000
     expected_first_year_donation_max: 200000000
+
+# ============================================================
+# 割引条件（コンサル系のみ適用）
+# ============================================================
+discount_conditions:
+  condition_a:
+    name: 自治体申請なし
+    discount_pct: 30
+    target_field: setup_fee
+    description: 既にふるさと納税掲載中の事業者向け
+  condition_b:
+    name: デザインなし
+    discount_pct: 30
+    target_field: setup_fee
+    description: 既にデザイン素材を保有している事業者向け
+  condition_a_plus_b:
+    name: 自治体申請なし + デザインなし
+    discount_pct: 60
+    target_field: setup_fee
+    description: A・B両条件を満たす場合

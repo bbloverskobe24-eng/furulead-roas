@@ -170,25 +170,25 @@ def render():
 
     st.divider()
 
-    if st.button("🚀 ROAS分析レポートを生成", type="primary", use_container_width=True):
+    if st.button("🚀 AI分析を実行", type="primary", use_container_width=True):
         if not form["business_name"]:
             st.error("事業者名を入力してください")
             return
         try:
             with st.spinner("AI分析中... (30〜60秒程度)"):
-                md_path, pdf_path, analysis, usage = roas_report.generate(form)
-            st.success(f"生成しました: {os.path.basename(pdf_path)}")
-            st.session_state["roas_last_pdf"] = pdf_path
-            st.session_state["roas_last_md"] = md_path
+                md_path, pdf_path, analysis, usage = roas_report.generate(form, mode="internal")
+            st.success("分析完了。下記から用途別のPDFをダウンロードできます。")
+            st.session_state["roas_form_snapshot"] = dict(form)
             st.session_state["roas_last_analysis"] = analysis
             st.session_state["roas_last_usage"] = usage
+            st.session_state["roas_pdfs"] = {"internal": (md_path, pdf_path)}
         except Exception as e:
-            st.error(f"生成失敗: {e}")
+            st.error(f"分析失敗: {e}")
             st.exception(e)
 
-    if "roas_last_pdf" in st.session_state and os.path.exists(st.session_state["roas_last_pdf"]):
+    if "roas_last_analysis" in st.session_state:
         st.divider()
-        st.markdown("##### 生成結果")
+        st.markdown("##### 分析結果")
 
         usage = st.session_state.get("roas_last_usage") or {}
         if usage:
@@ -207,23 +207,60 @@ def render():
                 f"換算レート 1 USD = {usage.get('fx_rate', 0):.1f} 円"
             )
 
-        c1, c2 = st.columns(2)
-        with c1:
-            with open(st.session_state["roas_last_pdf"], "rb") as f:
-                st.download_button(
-                    "⬇️ PDFダウンロード",
-                    f.read(),
-                    file_name=os.path.basename(st.session_state["roas_last_pdf"]),
-                    mime="application/pdf",
-                    use_container_width=True,
-                )
-        with c2:
-            with open(st.session_state["roas_last_md"], encoding="utf-8") as f:
-                st.download_button(
-                    "📝 Markdownダウンロード", f.read(),
-                    file_name=os.path.basename(st.session_state["roas_last_md"]),
-                    mime="text/markdown", use_container_width=True,
-                )
+        st.markdown("##### 📄 PDF出力（用途別）")
+        st.caption(
+            "**興味付け版**: 初回提供用（コスト・プラン詳細・ROAS試算なし） / "
+            "**一次営業版**: 商談用（ROAS・プラン別の手元残金あり） / "
+            "**社内全項目版**: 内部資料用"
+        )
+
+        modes = [
+            ("lead", "🎯 興味付け版", "事業者初回提供用（軽め）"),
+            ("sales", "💼 一次営業版", "商談時に渡す詳細版"),
+            ("internal", "📊 社内全項目版", "内部資料・分析根拠付き"),
+        ]
+
+        cols = st.columns(3)
+        pdfs = st.session_state.setdefault("roas_pdfs", {})
+        snapshot = st.session_state.get("roas_form_snapshot", form)
+        analysis = st.session_state["roas_last_analysis"]
+
+        for col, (mode, label, caption) in zip(cols, modes):
+            with col:
+                st.markdown(f"**{label}**")
+                st.caption(caption)
+                if mode not in pdfs:
+                    if st.button(f"生成", key=f"gen_{mode}", use_container_width=True):
+                        try:
+                            with st.spinner("PDF生成中..."):
+                                md_p, pdf_p = roas_report.generate_with_existing_analysis(
+                                    snapshot, analysis, usage, mode
+                                )
+                            pdfs[mode] = (md_p, pdf_p)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"生成失敗: {e}")
+                            st.exception(e)
+                else:
+                    md_p, pdf_p = pdfs[mode]
+                    with open(pdf_p, "rb") as f:
+                        st.download_button(
+                            "⬇️ PDF",
+                            f.read(),
+                            file_name=os.path.basename(pdf_p),
+                            mime="application/pdf",
+                            use_container_width=True,
+                            key=f"dl_pdf_{mode}",
+                        )
+                    with open(md_p, encoding="utf-8") as f:
+                        st.download_button(
+                            "📝 MD",
+                            f.read(),
+                            file_name=os.path.basename(md_p),
+                            mime="text/markdown",
+                            use_container_width=True,
+                            key=f"dl_md_{mode}",
+                        )
 
         with st.expander("🔍 AI分析JSON（デバッグ用）"):
-            st.json(st.session_state.get("roas_last_analysis", {}))
+            st.json(analysis)

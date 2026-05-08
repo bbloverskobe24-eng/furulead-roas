@@ -1,11 +1,15 @@
 """
-ふるりーどSPEED 質問定義
+ふるりーどSPEED 質問定義（v2.0 簡易5問のみ）
+
+役割: Phase 1（リード獲得・興味付け）の最低限項目を取得。
+詳細項目（複数商品・年商・代表者名等）はメール経由のヒアリングシートで取得。
 設計書: CSO_sales/ふるりーどSPEED/03_質問フロー詳細.md
+ヒアリングシート: templates/hearing_template.md
 """
 from __future__ import annotations
 from typing import Optional
 
-# 簡易コース（5問）
+# 簡易コース（5問）— 業種選択肢を管理画面ROAS分析と統一（食品/工芸/宿泊・体験/その他）
 SIMPLE_QUESTIONS = [
     {
         "id": "S1", "type": "text", "weight": 15,
@@ -20,10 +24,7 @@ SIMPLE_QUESTIONS = [
     {
         "id": "S3", "type": "button", "weight": 20,
         "prompt": "主力商品のカテゴリを選んでください。",
-        "choices": [
-            "食品（農産・畜産・水産）", "食品加工品・酒類",
-            "工芸・雑貨", "宿泊・体験", "その他",
-        ],
+        "choices": ["食品", "工芸", "宿泊・体験", "その他"],
     },
     {
         "id": "S4", "type": "text", "weight": 25,
@@ -38,7 +39,10 @@ SIMPLE_QUESTIONS = [
     },
 ]
 
-# 詳細コース（15問）
+# 詳細コース（15問）— DEPRECATED（v2.0以降）
+# Phase 2 のヒアリングシート（templates/hearing_template.md）に役割を移譲。
+# 既存セッションの互換性維持のため定義は残しているが、新規セッションでは使用しない。
+# on_follow() で簡易コースのみを案内するよう conversation.py を修正済。
 DETAILED_QUESTIONS = [
     {"id": "D1",  "type": "text",   "weight": 5,
      "prompt": "事業者名・屋号を教えてください。"},
