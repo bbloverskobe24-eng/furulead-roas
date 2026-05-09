@@ -20,6 +20,13 @@ STRIPE_PRICE_STANDARD=price_speed_standard_monthly_xxxxx
 LIFF_MEMBER_ID=2009886383-xxxxxxx
 
 # ============================================================
+# 月次配信バッチ（Cloud Scheduler用認証トークン）
+# ============================================================
+# 任意のランダム文字列（例: openssl rand -hex 32）
+# Cloud Schedulerからのリクエストヘッダ X-Dispatch-Token と一致するか検証
+DISPATCH_TOKEN=replace_with_random_secret_token
+
+# ============================================================
 # 既存環境変数（既に設定済の前提）
 # ============================================================
 # LINE_CHANNEL_SECRET=xxx

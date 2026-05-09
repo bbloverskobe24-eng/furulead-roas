@@ -14,7 +14,7 @@ from linebot.v3.messaging import (
 )
 from linebot.v3.webhooks import MessageEvent, TextMessageContent, FollowEvent
 
-from app import storage, conversation, member, stripe_handler
+from app import storage, conversation, member, stripe_handler, monthly_dispatcher
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -262,6 +262,57 @@ def member_status(line_user_id: str):
         "current_period_end": str(membership.get("current_period_end") or ""),
         "cancel_at_period_end": membership.get("cancel_at_period_end", False),
     })
+
+
+# ==================================================
+# 月次配信バッチ（Cloud Scheduler起動）
+# ==================================================
+@app.post("/admin/dispatch/monthly")
+def trigger_monthly_dispatch(x_dispatch_token: str = Header(None)):
+    """SPEED会員へ月次レポートを配信。Cloud Schedulerから定期起動。
+
+    認証: DISPATCH_TOKEN 環境変数と X-Dispatch-Token ヘッダの一致で認可。
+    Cloud Scheduler 設定:
+      - URL: POST {BASE_URL}/admin/dispatch/monthly
+      - Header: X-Dispatch-Token: <DISPATCH_TOKEN>
+      - スケジュール: 0 9 15 * * （毎月15日 9:00 JST）
+    """
+    expected = os.environ.get("DISPATCH_TOKEN", "")
+    if not expected:
+        raise HTTPException(503, "DISPATCH_TOKEN 未設定")
+    if x_dispatch_token != expected:
+        raise HTTPException(401, "invalid dispatch token")
+
+    try:
+        stats = monthly_dispatcher.dispatch_all()
+    except Exception as e:
+        log.exception("monthly dispatch failed")
+        raise HTTPException(500, str(e))
+
+    return JSONResponse(stats)
+
+
+@app.post("/admin/dispatch/test/{line_user_id}")
+def trigger_test_dispatch(line_user_id: str, x_dispatch_token: str = Header(None)):
+    """単一ユーザーへの配信テスト（手動デバッグ用）"""
+    expected = os.environ.get("DISPATCH_TOKEN", "")
+    if not expected:
+        raise HTTPException(503, "DISPATCH_TOKEN 未設定")
+    if x_dispatch_token != expected:
+        raise HTTPException(401, "invalid dispatch token")
+
+    user = storage.get_user(line_user_id)
+    if not user:
+        raise HTTPException(404, "user not found")
+
+    plan = (user.get("membership") or {}).get("plan", "speed_light")
+    try:
+        result = monthly_dispatcher.dispatch_for_user(line_user_id, plan, user)
+    except Exception as e:
+        log.exception("test dispatch failed")
+        raise HTTPException(500, str(e))
+
+    return JSONResponse(result)
 
 
 if __name__ == "__main__":
