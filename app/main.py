@@ -2,7 +2,7 @@
 import os
 import logging
 from fastapi import FastAPI, Request, HTTPException, Header
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, RedirectResponse, JSONResponse
 from dotenv import load_dotenv
 
 from linebot.v3 import WebhookParser
@@ -14,7 +14,7 @@ from linebot.v3.messaging import (
 )
 from linebot.v3.webhooks import MessageEvent, TextMessageContent, FollowEvent
 
-from app import storage, conversation
+from app import storage, conversation, member, stripe_handler
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -127,6 +127,141 @@ def deliver_report(line_user_id: str, pdf_url: str):
     except Exception as e:
         log.error(f"push failed: {e}")
         raise HTTPException(500, str(e))
+
+
+# ==================================================
+# SPEED会員機能（Stripe決済）
+# ==================================================
+@app.post("/webhook/stripe")
+async def stripe_webhook(request: Request, stripe_signature: str = Header(None)):
+    """Stripe Webhook受信エンドポイント。署名検証＋イベント処理。"""
+    if not stripe_handler.is_configured():
+        raise HTTPException(503, "Stripe未設定")
+
+    payload = await request.body()
+    try:
+        event = stripe_handler.verify_and_parse_event(payload, stripe_signature)
+    except Exception as e:
+        log.error(f"stripe signature verify failed: {e}")
+        raise HTTPException(400, "invalid signature")
+
+    try:
+        result = stripe_handler.handle_event(event)
+    except Exception as e:
+        log.exception(f"stripe event handling error: {e}")
+        # Stripeに5xxを返すと自動リトライされるので500
+        raise HTTPException(500, "event processing failed")
+
+    # ステータス変化に応じてLINE通知（active化・解約・支払失敗）
+    line_user_id = result.get("line_user_id")
+    res_type = result.get("result")
+    if line_user_id and res_type:
+        try:
+            _push_member_notification(line_user_id, res_type, result.get("plan"))
+        except Exception as e:
+            log.error(f"member push notify failed: {e}")
+
+    return JSONResponse(result)
+
+
+def _push_member_notification(line_user_id: str, result_type: str, plan: str = None):
+    """会員ステータス変化に応じたLINE通知。"""
+    text = None
+    if result_type == "activated" and plan:
+        text = member.welcome_message(plan)
+    elif result_type == "canceled":
+        text = member.cancel_message()
+    elif result_type == "past_due":
+        text = member.payment_failed_message()
+    elif result_type == "trial_will_end" and plan:
+        text = member.trial_ending_message(plan)
+
+    if text:
+        _line_api().push_message(PushMessageRequest(
+            to=line_user_id,
+            messages=[TextMessage(text=text)],
+        ))
+
+
+@app.get("/member/checkout")
+def member_checkout(line_user_id: str, plan: str):
+    """Stripe Checkout画面のURLを返す（LIFF会員ページから呼び出される）。
+
+    Args:
+        line_user_id: LINE user ID（LIFF SDKから取得）
+        plan: "light" | "standard"
+    """
+    if plan not in ("light", "standard"):
+        raise HTTPException(400, "plan は light か standard を指定してください")
+
+    if not stripe_handler.is_configured():
+        raise HTTPException(503, "Stripe未設定")
+
+    try:
+        url = stripe_handler.create_checkout_session(line_user_id, plan)
+    except Exception as e:
+        log.exception("checkout session creation failed")
+        raise HTTPException(500, str(e))
+
+    return RedirectResponse(url, status_code=303)
+
+
+@app.get("/member/portal")
+def member_portal(line_user_id: str):
+    """Stripe Customer Portal（解約・カード更新）へリダイレクト。"""
+    if not stripe_handler.is_configured():
+        raise HTTPException(503, "Stripe未設定")
+
+    try:
+        url = stripe_handler.create_portal_session(line_user_id)
+    except ValueError as e:
+        raise HTTPException(404, str(e))
+    except Exception as e:
+        log.exception("portal session creation failed")
+        raise HTTPException(500, str(e))
+
+    return RedirectResponse(url, status_code=303)
+
+
+@app.get("/member/welcome")
+def member_welcome(session_id: str = None):
+    """Checkout完了後のリダイレクト先（LIFFから戻る時に表示）"""
+    return JSONResponse({
+        "status": "ok",
+        "message": "ご登録ありがとうございます！LINEのトークルームをご確認ください。",
+        "session_id": session_id,
+    })
+
+
+@app.get("/member/cancel")
+def member_cancel():
+    """Checkoutキャンセル時のリダイレクト先"""
+    return JSONResponse({
+        "status": "canceled",
+        "message": "お手続きを中止しました。",
+    })
+
+
+@app.get("/member/portal_return")
+def member_portal_return():
+    """Customer Portalから戻ってきた時の表示"""
+    return JSONResponse({
+        "status": "ok",
+        "message": "お手続きありがとうございました。LINEに戻ってご確認ください。",
+    })
+
+
+@app.get("/member/status")
+def member_status(line_user_id: str):
+    """会員ステータス取得（管理画面・LIFFから）"""
+    membership = storage.get_membership(line_user_id) or {}
+    return JSONResponse({
+        "line_user_id": line_user_id,
+        "status": membership.get("status", "none"),
+        "plan": membership.get("plan"),
+        "current_period_end": str(membership.get("current_period_end") or ""),
+        "cancel_at_period_end": membership.get("cancel_at_period_end", False),
+    })
 
 
 if __name__ == "__main__":

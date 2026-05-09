@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPEED会員機能（Stripe決済）実装計画書サマリ</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --blue: #2563EB;
+    --blue-dark: #1E40AF;
+    --blue-light: #EFF6FF;
+    --blue-soft: #F5F9FF;
+    --text: #0F172A;
+    --text-sub: #475569;
+    --border: #DBEAFE;
+    --green: #059669;
+    --green-light: #D1FAE5;
+    --amber: #D97706;
+    --amber-light: #FEF3C7;
+    --red: #DC2626;
+    --red-light: #FEE2E2;
+    --purple: #7C3AED;
+    --speed: #06C755;
+    --speed-light: #DCFCE7;
+  }
+  body {
+    font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    background: var(--blue-soft);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 24px 16px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  header {
+    background: white;
+    border-radius: 14px;
+    padding: 28px 30px 22px;
+    margin-bottom: 22px;
+    border-left: 6px solid var(--speed);
+    box-shadow: 0 2px 8px rgba(37,99,235,0.06);
+  }
+  header h1 { font-size: 23px; color: var(--blue-dark); font-weight: 900; margin-bottom: 4px; }
+  header .meta { font-size: 12px; color: var(--text-sub); }
+  header .lead { font-size: 13px; color: var(--text-sub); margin-top: 12px; line-height: 1.7; }
+
+  .section {
+    background: white;
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+  }
+  .section h2 {
+    font-size: 17px;
+    color: var(--blue-dark);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--blue-light);
+  }
+
+  /* プラン比較カード */
+  .plans {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .plan-card {
+    background: var(--blue-soft);
+    border-radius: 10px;
+    padding: 18px 20px;
+    border-top: 5px solid var(--speed);
+  }
+  .plan-card.standard { border-top-color: var(--blue-dark); background: #f0f9ff; }
+  .plan-card h3 { font-size: 17px; font-weight: 900; color: var(--blue-dark); margin-bottom: 4px; }
+  .plan-card .price { font-size: 26px; color: var(--text); font-weight: 900; margin-bottom: 12px; }
+  .plan-card .price small { font-size: 12px; color: var(--text-sub); font-weight: 500; }
+  .plan-card ul { font-size: 12px; color: var(--text-sub); padding-left: 16px; line-height: 1.7; }
+  .plan-card ul li { margin-bottom: 4px; }
+
+  /* フロー図 */
+  .flow-diagram {
+    background: var(--blue-soft);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 14px 0;
+  }
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .flow-step {
+    flex: 1;
+    background: white;
+    border-radius: 8px;
+    padding: 12px 14px;
+    border-left: 4px solid var(--blue);
+    font-size: 12px;
+  }
+  .flow-step strong { color: var(--blue-dark); display: block; margin-bottom: 2px; font-size: 13px; }
+  .flow-arrow { color: var(--text-sub); font-size: 18px; }
+
+  /* テーブル */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  table th, table td {
+    padding: 9px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  table th {
+    background: var(--blue-light);
+    color: var(--blue-dark);
+    font-weight: 700;
+    font-size: 11.5px;
+  }
+  table td.right { text-align: right; }
+  table tr:last-child td { border-bottom: none; }
+
+  /* ロードマップ */
+  .roadmap {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .phase {
+    background: white;
+    border-radius: 8px;
+    padding: 12px 10px;
+    border-top: 4px solid var(--blue);
+    font-size: 11.5px;
+  }
+  .phase h4 { color: var(--blue-dark); font-size: 12px; margin-bottom: 4px; }
+  .phase .duration { color: var(--text-sub); font-size: 10px; margin-bottom: 6px; }
+  .phase ul { padding-left: 14px; line-height: 1.5; }
+
+  /* KPIカード */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .kpi {
+    background: white;
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .kpi .label { font-size: 11px; color: var(--text-sub); margin-bottom: 4px; }
+  .kpi .value { font-size: 18px; font-weight: 900; color: var(--blue-dark); }
+  .kpi .sub { font-size: 10px; color: var(--text-sub); margin-top: 2px; }
+
+  /* リスク */
+  .risk-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .risk-card {
+    background: var(--amber-light);
+    border-left: 4px solid var(--amber);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+  .risk-card h4 { color: var(--amber); font-size: 13px; margin-bottom: 4px; }
+  .risk-card ul { padding-left: 14px; color: var(--text-sub); line-height: 1.6; }
+
+  .insight {
+    background: var(--green-light);
+    border-left: 5px solid var(--green);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-top: 14px;
+    font-size: 13px;
+  }
+  .insight strong { color: var(--green); }
+
+  footer { text-align: center; color: var(--text-sub); font-size: 11px; padding: 20px 0; }
+
+  @media (max-width: 800px) {
+    .plans { grid-template-columns: 1fr; }
+    .roadmap { grid-template-columns: 1fr 1fr; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .risk-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>⚡ SPEED会員機能（Stripe決済）実装計画書サマリ</h1>
+    <div class="meta">本書: <code>CSO_sales/ふるりーどSPEED/04_SPEED会員機能_実装計画書.md</code> ／ 2026-05-09 v1.0</div>
+    <p class="lead">
+      無料診断（簡易5問）から有料月額会員へとリードを引き上げる<strong>SPEED会員機能</strong>の実装計画。LINE経由でStripe Checkout決済し、月次配信で価値提供する仕組みを構築。
+      総工数 <strong>約41人日</strong>（5フェーズ）／粗利率 <strong>96%</strong>の高収益モデル。
+    </p>
+  </header>
+
+  <!-- 2サブプラン -->
+  <div class="section">
+    <h2>1. 提供する2サブプラン</h2>
+    <div class="plans">
+      <div class="plan-card">
+        <h3>⚡ SPEED Light</h3>
+        <div class="price">¥4,980<small>/月（税別）</small></div>
+        <ul>
+          <li>適正度スコア診断 月1回</li>
+          <li>5サイトベンチマーク調査 月1回</li>
+          <li>AIによる改善提案（自動生成）</li>
+          <li>オンラインサロン参加（情報閲覧）</li>
+          <li>LINE限定コンテンツ配信</li>
+        </ul>
+      </div>
+      <div class="plan-card standard">
+        <h3>⚡ SPEED Standard</h3>
+        <div class="price">¥9,800<small>/月（税別）</small></div>
+        <ul>
+          <li>Light の全機能</li>
+          <li>適正度スコア診断 月3回</li>
+          <li>商品名・SEOキーワード改善案</li>
+          <li>競合上位10商品の詳細分析</li>
+          <li>サロン質問・コメント可</li>
+          <li>月1回 グループQ&A（Zoom）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 入会フロー -->
+  <div class="section">
+    <h2>2. 入会フロー（LINE → Stripe → 会員化）</h2>
+    <div class="flow-diagram">
+      <div class="flow-row">
+        <div class="flow-step"><strong>① LINE友だち追加</strong>無料の入口（LP・SNSから流入）</div>
+        <div class="flow-arrow">▶</div>
+        <div class="flow-step"><strong>② 簡易5問診断</strong>興味付け版PDFを無料配信</div>
+        <div class="flow-arrow">▶</div>
+        <div class="flow-step"><strong>③ 「SPEED会員登録」タップ</strong>リッチメニュー or メッセージから</div>
+      </div>
+      <div class="flow-row">
+        <div class="flow-step"><strong>④ LIFF会員ページ</strong>Light / Standardを選択</div>
+        <div class="flow-arrow">▶</div>
+        <div class="flow-step"><strong>⑤ Stripe Checkout</strong>カード・Apple Pay・Google Pay対応</div>
+        <div class="flow-arrow">▶</div>
+        <div class="flow-step"><strong>⑥ ウェルカム配信</strong>会員リッチメニューに切替・月次配信開始</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- アーキテクチャ -->
+  <div class="section">
+    <h2>3. システム構成（既存資産流用 + Stripe追加）</h2>
+    <table>
+      <thead>
+        <tr><th style="width:25%">コンポーネント</th><th>役割</th><th style="width:20%">実装ファイル</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>app/stripe_handler.py</strong></td>
+          <td>Stripe Webhook処理・サブスク状態同期（新規）</td>
+          <td>新規</td>
+        </tr>
+        <tr>
+          <td><strong>app/member.py</strong></td>
+          <td>会員管理ロジック（登録・解約・ステータス遷移）</td>
+          <td>新規</td>
+        </tr>
+        <tr>
+          <td><strong>app/monthly_dispatcher.py</strong></td>
+          <td>月次配信バッチ（診断・ベンチマーク・コンテンツ）</td>
+          <td>新規</td>
+        </tr>
+        <tr>
+          <td>liff_member.html</td>
+          <td>LIFF会員ページ（プラン選択・決済導線）</td>
+          <td>新規</td>
+        </tr>
+        <tr>
+          <td>app/main.py</td>
+          <td>Webhook routes追加（既存FastAPI拡張）</td>
+          <td>修正</td>
+        </tr>
+        <tr>
+          <td>admin/streamlit_app.py</td>
+          <td>会員管理タブ追加（管理画面拡張）</td>
+          <td>修正</td>
+        </tr>
+        <tr>
+          <td>data/plans.yaml</td>
+          <td>SPEED Light/Standard定義（既に追加済）</td>
+          <td>✅完了</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ロードマップ -->
+  <div class="section">
+    <h2>4. 実装ロードマップ（5フェーズ・約41人日 / 2〜3ヶ月）</h2>
+    <div class="roadmap">
+      <div class="phase">
+        <h4>Phase 1<br>Stripe基盤</h4>
+        <div class="duration">2週間 / 5人日</div>
+        <ul>
+          <li>Stripeアカウント開設</li>
+          <li>Products/Prices作成</li>
+          <li>Webhook設定</li>
+          <li>特商法表記策定</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <h4>Phase 2<br>バックエンド</h4>
+        <div class="duration">3週間 / 12人日</div>
+        <ul>
+          <li>stripe_handler.py</li>
+          <li>member.py</li>
+          <li>3エンドポイント実装</li>
+          <li>Firestore拡張</li>
+          <li>単体テスト</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <h4>Phase 3<br>LIFF実装</h4>
+        <div class="duration">2週間 / 8人日</div>
+        <ul>
+          <li>LIFF会員ページ</li>
+          <li>リッチメニュー3種</li>
+          <li>UAテスト</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <h4>Phase 4<br>月次配信</h4>
+        <div class="duration">3週間 / 10人日</div>
+        <ul>
+          <li>Cloud Scheduler</li>
+          <li>診断レポート生成</li>
+          <li>LINE push配信</li>
+          <li>監査ログ</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <h4>Phase 5<br>本番リリース</h4>
+        <div class="duration">2週間 / 6人日</div>
+        <ul>
+          <li>本番モード切替</li>
+          <li>管理画面拡張</li>
+          <li>運用マニュアル</li>
+          <li>ローンチ告知</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 売上シミュレーション -->
+  <div class="section">
+    <h2>5. 売上・コストシミュレーション（粗利率 96%）</h2>
+    <table>
+      <thead>
+        <tr><th>会員数</th><th class="right">月商</th><th class="right">運用コスト</th><th class="right">粗利</th><th class="right">粗利率</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>100名</td>
+          <td class="right">¥649,400</td>
+          <td class="right">¥24,500</td>
+          <td class="right"><strong>¥624,900</strong></td>
+          <td class="right">96%</td>
+        </tr>
+        <tr>
+          <td>500名</td>
+          <td class="right">¥3,247,000</td>
+          <td class="right">¥118,000</td>
+          <td class="right"><strong>¥3,129,000</strong></td>
+          <td class="right">96%</td>
+        </tr>
+        <tr>
+          <td>1,000名</td>
+          <td class="right">¥6,494,000</td>
+          <td class="right">¥240,000</td>
+          <td class="right"><strong>¥6,254,000</strong></td>
+          <td class="right">96%</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:11px; color:var(--text-sub); margin-top:10px;">
+      ※ Light:Standard = 7:3 想定。Stripe決済手数料(3.6%) + Cloud Run + Firestore + Anthropic API + LINE 含む。コンテンツ運用人件費は別途。
+    </p>
+  </div>
+
+  <!-- KPI -->
+  <div class="section">
+    <h2>6. 成功指標（リリース1年後の目標）</h2>
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="label">月間新規会員</div>
+        <div class="value">50〜100名</div>
+        <div class="sub">無料診断者の5〜10%転換</div>
+      </div>
+      <div class="kpi">
+        <div class="label">月次解約率</div>
+        <div class="value">3%以下</div>
+        <div class="sub">業界平均5〜10%を下回る</div>
+      </div>
+      <div class="kpi">
+        <div class="label">累計会員数</div>
+        <div class="value">500名</div>
+        <div class="sub">月商 ¥3,000,000 規模</div>
+      </div>
+      <div class="kpi">
+        <div class="label">コンサル誘導率</div>
+        <div class="value">5%以上</div>
+        <div class="sub">月会員→シルバー以上</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- リスク -->
+  <div class="section">
+    <h2>7. リスク・論点</h2>
+    <div class="risk-grid">
+      <div class="risk-card">
+        <h4>⚖️ 法務リスク</h4>
+        <ul>
+          <li>特定商取引法の表記義務（サブスク販売）</li>
+          <li>利用規約・プライバシーポリシー更新</li>
+          <li>解約導線の明示性（消費者契約法）</li>
+        </ul>
+      </div>
+      <div class="risk-card">
+        <h4>🔧 技術リスク</h4>
+        <ul>
+          <li>Stripe Webhookの冪等性（event_id重複排除）</li>
+          <li>LINE userId永続性（ブロック後の処理）</li>
+          <li>大規模会員時のバッチパフォーマンス</li>
+        </ul>
+      </div>
+      <div class="risk-card">
+        <h4>📞 運用リスク</h4>
+        <ul>
+          <li>月次コンテンツの継続供給体制</li>
+          <li>カスタマーサポート負荷</li>
+          <li>解約率（Churn Rate）管理</li>
+        </ul>
+      </div>
+      <div class="risk-card">
+        <h4>📈 マーケティングリスク</h4>
+        <ul>
+          <li>無料層との価値差別化</li>
+          <li>シルバー以上への自然な誘導動線</li>
+          <li>「月¥4,980払う価値」の明確化</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 着手判断 -->
+  <div class="section">
+    <h2>8. 着手前のチェックリスト</h2>
+    <table>
+      <thead>
+        <tr><th style="width:15%">役員</th><th>確認事項</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>CSO</strong></td>
+          <td>
+            ☐ 月額¥4,980 / ¥9,800 の価格妥当性<br>
+            ☐ 提供コンテンツの月次運用体制<br>
+            ☐ 利用規約・特商法表記の法務確認<br>
+            ☐ カスタマーサポート対応者の確保
+          </td>
+        </tr>
+        <tr>
+          <td><strong>CDO</strong></td>
+          <td>
+            ☐ Stripeアカウント開設可能（法人 or 個人事業主）<br>
+            ☐ LINE Developers でLIFF追加発行可能<br>
+            ☐ Cloud Run / Firestore / Anthropic API のリソース容量<br>
+            ☐ 既存Bot機能への影響なし（リグレッション）
+          </td>
+        </tr>
+        <tr>
+          <td><strong>CMO</strong></td>
+          <td>
+            ☐ LP・SNS でのSPEED会員訴求コピー作成<br>
+            ☐ 既存無料登録者への告知シナリオ準備<br>
+            ☐ LINE OpenChat / Discord 等のサロン基盤選定
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="insight">
+      <strong>💡 リリース順序の推奨</strong><br>
+      ① CSO主導: 価格・コンテンツ・法務の確定（先行Phase 1の前段階）<br>
+      ② CDO主導: Stripeアカウント開設・テスト環境構築<br>
+      ③ CMO並行: 訴求コピー作成（Phase 3と並行）<br>
+      ④ 三役員定例: 隔週進捗共有（チャットワーク自動投稿）
+    </div>
+  </div>
+
+  <footer>
+    FutureBright株式会社 / SPEED会員機能 実装計画書サマリ v1.0 / 2026-05-09<br>
+    詳細は <code>CSO_sales/ふるりーどSPEED/04_SPEED会員機能_実装計画書.md</code> を参照
+  </footer>
+
+</div>
+</body>
+</html>

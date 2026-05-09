@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPEED会員登録 — ふるりーどSPEED</title>
+<meta name="robots" content="noindex,nofollow">
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --blue: #2563EB;
+    --blue-dark: #1E40AF;
+    --blue-light: #EFF6FF;
+    --blue-soft: #F5F9FF;
+    --text: #0F172A;
+    --text-sub: #475569;
+    --border: #DBEAFE;
+    --speed: #06C755;
+    --speed-light: #DCFCE7;
+    --gold: #D97706;
+  }
+  body {
+    font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    background: var(--blue-soft);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 16px;
+  }
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  header {
+    text-align: center;
+    padding: 16px 0 14px;
+  }
+  header h1 {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--blue-dark);
+  }
+  header .lead {
+    font-size: 12px;
+    color: var(--text-sub);
+    margin-top: 4px;
+  }
+
+  .plan-card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+    border: 2px solid var(--border);
+    border-top: 5px solid var(--speed);
+    box-shadow: 0 4px 12px rgba(37,99,235,0.06);
+  }
+  .plan-card.standard { border-top-color: var(--gold); }
+  .plan-card .badge {
+    display: inline-block;
+    font-size: 10px;
+    background: var(--speed-light);
+    color: var(--speed);
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+  }
+  .plan-card.standard .badge {
+    background: #FEF3C7;
+    color: var(--gold);
+  }
+  .plan-card h2 {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--blue-dark);
+    margin-bottom: 4px;
+  }
+  .plan-card .price {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .plan-card .price small {
+    font-size: 11px;
+    color: var(--text-sub);
+    font-weight: 500;
+  }
+  .plan-card .description {
+    font-size: 12px;
+    color: var(--text-sub);
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .plan-card ul {
+    font-size: 13px;
+    list-style: none;
+    margin-bottom: 14px;
+  }
+  .plan-card ul li {
+    padding-left: 22px;
+    position: relative;
+    margin-bottom: 6px;
+  }
+  .plan-card ul li::before {
+    content: "✓";
+    position: absolute;
+    left: 4px;
+    color: var(--speed);
+    font-weight: 900;
+  }
+  .signup-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: var(--speed);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 15px;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(6,199,85,0.3);
+    font-family: inherit;
+  }
+  .standard .signup-btn { background: var(--gold); box-shadow: 0 4px 12px rgba(217,119,6,0.3); }
+  .signup-btn:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .note {
+    font-size: 11px;
+    color: var(--text-sub);
+    text-align: center;
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: white;
+    border-radius: 8px;
+  }
+  .note a {
+    color: var(--blue);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  #status {
+    text-align: center;
+    padding: 16px;
+    border-radius: 8px;
+    margin: 12px 0;
+    display: none;
+    font-size: 13px;
+  }
+  .status-loading { background: #FEF3C7; color: #92400E; }
+  .status-error { background: #FEE2E2; color: #991B1B; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>⚡ SPEED会員登録</h1>
+    <div class="lead">継続的に分析・改善提案を受け取りたい方へ</div>
+  </header>
+
+  <div id="status"></div>
+
+  <!-- SPEED Light -->
+  <div class="plan-card light">
+    <div class="badge">エントリー向け</div>
+    <h2>SPEED Light</h2>
+    <div class="price">¥4,980<small>／月（税別）</small></div>
+    <div class="description">
+      自走で参入準備したい事業者向け。月額制で継続診断・改善提案。
+    </div>
+    <ul>
+      <li>ふるさと納税適正度スコア診断 月1回</li>
+      <li>5サイトベンチマーク調査レポート</li>
+      <li>AIによる改善提案（自動生成）</li>
+      <li>オンラインサロン参加（情報閲覧）</li>
+      <li>LINE限定コンテンツ配信</li>
+    </ul>
+    <button class="signup-btn" data-plan="light">⚡ Lightに登録（決済へ）</button>
+  </div>
+
+  <!-- SPEED Standard -->
+  <div class="plan-card standard">
+    <div class="badge">継続活用向け</div>
+    <h2>SPEED Standard</h2>
+    <div class="price">¥9,800<small>／月（税別）</small></div>
+    <div class="description">
+      継続的に分析活用したい事業者向け。Lightの全機能 + 詳細分析・コミュニティ機能。
+    </div>
+    <ul>
+      <li>Light の全機能</li>
+      <li>適正度スコア診断 月3回</li>
+      <li>商品名・SEOキーワード改善案</li>
+      <li>競合上位10商品の詳細分析</li>
+      <li>サロン質問・コメント可</li>
+      <li>月1回 グループQ&A（Zoom）</li>
+    </ul>
+    <button class="signup-btn" data-plan="standard">⚡ Standardに登録（決済へ）</button>
+  </div>
+
+  <div class="note">
+    決済はStripeで安全に処理されます。<br>
+    解約はいつでも可能（次回課金日の前日まで）。<br>
+    <a href="/tokushoho.html" target="_blank">特定商取引法に基づく表記</a> ／
+    <a href="/privacy.html" target="_blank">プライバシーポリシー</a>
+  </div>
+
+</div>
+
+<script>
+  // ⚠️ 本番LIFF IDを設定
+  const LIFF_ID = window.LIFF_MEMBER_ID || 'REPLACE_WITH_LIFF_MEMBER_ID';
+  // ⚠️ Cloud RunのBASE URLを設定
+  const API_BASE = window.API_BASE_URL || 'https://furulead-speed-bot-711289996840.asia-northeast1.run.app';
+
+  let lineUserId = null;
+
+  async function init() {
+    if (LIFF_ID.startsWith('REPLACE_')) {
+      console.warn('LIFF_ID未設定。ブラウザ単体モードで動作');
+      // テスト用ダミーID（実際はLIFF未設定なら停止すべき）
+      lineUserId = 'TEST_USER_' + Date.now();
+      return;
+    }
+    try {
+      await liff.init({ liffId: LIFF_ID });
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
+      const profile = await liff.getProfile();
+      lineUserId = profile.userId;
+      console.log('LIFF ready, userId:', lineUserId);
+    } catch (e) {
+      showStatus('LIFF初期化エラー: ' + e.message, 'error');
+    }
+  }
+
+  function showStatus(text, type) {
+    const el = document.getElementById('status');
+    el.textContent = text;
+    el.className = type === 'error' ? 'status-error' : 'status-loading';
+    el.style.display = 'block';
+  }
+
+  // 各プランボタン
+  document.querySelectorAll('.signup-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!lineUserId) {
+        showStatus('LINE認証が完了していません。少し待って再度お試しください。', 'error');
+        return;
+      }
+      const plan = btn.dataset.plan;
+      btn.disabled = true;
+      showStatus('Stripe決済画面を準備しています...', 'loading');
+
+      try {
+        // checkout endpoint呼び出し → Stripe URLにリダイレクト
+        const url = `${API_BASE}/member/checkout?line_user_id=${encodeURIComponent(lineUserId)}&plan=${plan}`;
+        window.location.href = url;
+      } catch (e) {
+        showStatus('決済画面の準備に失敗しました: ' + e.message, 'error');
+        btn.disabled = false;
+      }
+    });
+  });
+
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ふるさと納税 参入分析 ヒアリングシート</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --blue: #2563EB;
+    --blue-dark: #1E40AF;
+    --blue-light: #EFF6FF;
+    --blue-mid: #DBEAFE;
+    --blue-soft: #F5F9FF;
+    --text: #0F172A;
+    --text-sub: #475569;
+    --border: #DBEAFE;
+    --line: #94A3B8;
+  }
+  @page {
+    size: A4;
+    margin: 12mm 14mm;
+  }
+  body {
+    font-family: 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+    background: white;
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 11pt;
+  }
+  .doc {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 28px;
+    background: white;
+  }
+
+  /* ヘッダー */
+  header {
+    border-bottom: 3px solid var(--blue);
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+  }
+  header .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 9.5pt;
+    color: var(--text-sub);
+    margin-bottom: 6px;
+  }
+  header h1 {
+    font-size: 20pt;
+    color: var(--blue-dark);
+    font-weight: 900;
+    margin-bottom: 4px;
+  }
+  header .subtitle {
+    font-size: 11pt;
+    color: var(--text-sub);
+    font-weight: 500;
+  }
+
+  /* イントロボックス */
+  .intro {
+    background: var(--blue-soft);
+    border-left: 4px solid var(--blue);
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 18px;
+    font-size: 10pt;
+    line-height: 1.6;
+  }
+  .intro strong { color: var(--blue-dark); }
+
+  /* セクション */
+  section {
+    margin-bottom: 18px;
+    page-break-inside: avoid;
+  }
+  section h2 {
+    font-size: 12.5pt;
+    color: white;
+    background: var(--blue);
+    padding: 6px 12px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+  section h3 {
+    font-size: 11pt;
+    color: var(--blue-dark);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 3px;
+    margin: 10px 0 6px;
+  }
+
+  /* テーブル（フォーム形式） */
+  table.form {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10pt;
+    margin-bottom: 8px;
+  }
+  table.form th, table.form td {
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: middle;
+  }
+  table.form th {
+    background: var(--blue-light);
+    width: 32%;
+    color: var(--blue-dark);
+    font-weight: 700;
+    font-size: 9.5pt;
+  }
+  table.form td {
+    background: white;
+    min-height: 28px;
+    height: 32px;
+  }
+  table.form td.fill {
+    background-image: linear-gradient(to right, var(--line) 0, var(--line) 6px, transparent 6px, transparent 12px);
+    background-size: 12px 1px;
+    background-repeat: repeat-x;
+    background-position: bottom 4px left 0;
+  }
+  /* チェックボックス・選択肢 */
+  .choices {
+    font-size: 10pt;
+    color: var(--text-sub);
+  }
+  .choices span { white-space: nowrap; margin-right: 12px; }
+  .choices .box {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid var(--text-sub);
+    border-radius: 2px;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
+  /* 自由記述ボックス */
+  .free-text {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    min-height: 80px;
+    padding: 8px 10px;
+    background: repeating-linear-gradient(
+      to bottom,
+      white 0,
+      white 22px,
+      var(--blue-soft) 22px,
+      var(--blue-soft) 23px
+    );
+    margin: 4px 0 10px;
+    font-size: 10pt;
+  }
+  .free-text.tall { min-height: 120px; }
+
+  /* 商品セクション */
+  .product-block {
+    border: 2px solid var(--blue-mid);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    background: var(--blue-soft);
+  }
+  .product-block .label {
+    font-weight: 700;
+    color: var(--blue-dark);
+    font-size: 11pt;
+    margin-bottom: 6px;
+  }
+
+  /* フッター（記入者情報・送付方法） */
+  footer {
+    border-top: 2px solid var(--border);
+    margin-top: 20px;
+    padding-top: 14px;
+    font-size: 9.5pt;
+    color: var(--text-sub);
+    line-height: 1.6;
+  }
+  footer .send-box {
+    background: var(--blue-light);
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin: 10px 0;
+    color: var(--blue-dark);
+    font-size: 10pt;
+  }
+  footer .company {
+    font-weight: 700;
+    color: var(--blue-dark);
+    font-size: 11pt;
+    margin-top: 8px;
+  }
+
+  /* 印刷時 */
+  @media print {
+    body { background: white; }
+    .doc { padding: 0; max-width: 100%; }
+    .no-print { display: none; }
+    section { page-break-inside: avoid; }
+  }
+
+  /* 印刷ボタン */
+  .print-btn {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: var(--blue);
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12pt;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+    z-index: 100;
+  }
+  .print-btn:hover { background: var(--blue-dark); }
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">📄 PDF保存・印刷</button>
+
+<div class="doc">
+
+  <header>
+    <div class="top-bar">
+      <span>FORM ID: FB-FRD-HEARING-v1.0</span>
+      <span>記入日: 　　　年　　月　　日</span>
+    </div>
+    <h1>ふるさと納税 参入分析 ヒアリングシート</h1>
+    <div class="subtitle">FutureBright株式会社 「ふるりーど」サービス</div>
+  </header>
+
+  <div class="intro">
+    ご記入ありがとうございます。下記項目にご回答いただくことで、御社専用の<strong>「ふるさと納税 参入分析レポート」</strong>をAIが作成いたします。
+    所要時間は<strong>約10〜15分</strong>です。記入いただいた情報は、当社のサービス提供目的のみに利用し、第三者へは提供いたしません。
+  </div>
+
+  <!-- 1. 事業者基本情報 -->
+  <section>
+    <h2>1. 事業者基本情報</h2>
+    <table class="form">
+      <tr>
+        <th>事業者名（正式名称）</th>
+        <td class="fill"></td>
+      </tr>
+      <tr>
+        <th>代表者名</th>
+        <td class="fill"></td>
+      </tr>
+      <tr>
+        <th>所在地：都道府県</th>
+        <td class="fill"></td>
+      </tr>
+      <tr>
+        <th>所在地：市区町村</th>
+        <td class="fill"></td>
+      </tr>
+      <tr>
+        <th>業種</th>
+        <td>
+          <span class="choices">
+            <span><span class="box"></span>食品</span>
+            <span><span class="box"></span>工芸</span>
+            <span><span class="box"></span>宿泊・体験</span>
+            <span><span class="box"></span>その他（　　　　　　　　　）</span>
+          </span>
+        </td>
+      </tr>
+      <tr>
+        <th>Webサイト URL（任意）</th>
+        <td class="fill"></td>
+      </tr>
+      <tr>
+        <th>創業年数</th>
+        <td>　　　年</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- 2. 事業規模・現状 -->
+  <section>
+    <h2>2. 事業規模・現状</h2>
+    <table class="form">
+      <tr>
+        <th>年商レンジ</th>
+        <td>
+          <span class="choices">
+            <span><span class="box"></span>1,000万未満</span>
+            <span><span class="box"></span>1,000-5,000万</span>
+            <span><span class="box"></span>5,000万-1億</span>
+            <span><span class="box"></span>1-5億</span>
+            <span><span class="box"></span>5億以上</span>
+          </span>
+        </td>
+      </tr>
+      <tr>
+        <th>従業員数</th>
+        <td>　　　名</td>
+      </tr>
+      <tr>
+        <th>ふるさと納税ステータス</th>
+        <td>
+          <span class="choices">
+            <span><span class="box"></span>未掲載</span>
+            <span><span class="box"></span>掲載中</span>
+            <span><span class="box"></span>検討中</span>
+          </span>
+        </td>
+      </tr>
+      <tr>
+        <th>現在の年間寄付額（掲載中の場合）</th>
+        <td class="fill">　　　　　　　　　　　　　　　円</td>
+      </tr>
+      <tr>
+        <th>想定／連携自治体名</th>
+        <td class="fill"></td>
+      </tr>
+      <tr>
+        <th>自治体との関係</th>
+        <td>
+          <span class="choices">
+            <span><span class="box"></span>連携あり</span>
+            <span><span class="box"></span>相談中</span>
+            <span><span class="box"></span>なし</span>
+          </span>
+        </td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- 3. 主力商品 -->
+  <section>
+    <h2>3. 主力商品（複数記入可・3〜5商品が目安）</h2>
+    <p style="font-size:10pt; color:var(--text-sub); margin-bottom:10px;">
+      ふるさと納税で出したい商品をご記入ください。3〜5商品ほど挙げていただけると分析精度が上がります。
+    </p>
+
+    <div class="product-block">
+      <div class="label">商品 ①</div>
+      <table class="form">
+        <tr><th>商品名</th><td class="fill"></td></tr>
+        <tr><th>小売価格（円）</th><td>　　　　　　　　円</td></tr>
+        <tr><th>月間供給可能量</th><td>　　　　　　　　個</td></tr>
+        <tr><th>差別化ポイント・特徴</th><td class="fill"></td></tr>
+      </table>
+    </div>
+
+    <div class="product-block">
+      <div class="label">商品 ②</div>
+      <table class="form">
+        <tr><th>商品名</th><td class="fill"></td></tr>
+        <tr><th>小売価格（円）</th><td>　　　　　　　　円</td></tr>
+        <tr><th>月間供給可能量</th><td>　　　　　　　　個</td></tr>
+        <tr><th>差別化ポイント・特徴</th><td class="fill"></td></tr>
+      </table>
+    </div>
+
+    <div class="product-block">
+      <div class="label">商品 ③</div>
+      <table class="form">
+        <tr><th>商品名</th><td class="fill"></td></tr>
+        <tr><th>小売価格（円）</th><td>　　　　　　　　円</td></tr>
+        <tr><th>月間供給可能量</th><td>　　　　　　　　個</td></tr>
+        <tr><th>差別化ポイント・特徴</th><td class="fill"></td></tr>
+      </table>
+    </div>
+
+    <p style="font-size:9pt; color:var(--text-sub);">
+      ※ 4商品目以降が必要な場合は、別紙またはメール本文にて追記ください。
+    </p>
+  </section>
+
+  <!-- 4. 差別化要素 -->
+  <section>
+    <h2>4. 御社の差別化要素</h2>
+
+    <h3>ストーリー・強み</h3>
+    <p style="font-size:9.5pt; color:var(--text-sub); margin-bottom:4px;">
+      創業の想い、独自の製法、地域とのつながり、こだわりの素材など、御社の「らしさ」を自由にお書きください。
+    </p>
+    <div class="free-text tall"></div>
+
+    <h3>受賞歴（あれば）</h3>
+    <p style="font-size:9.5pt; color:var(--text-sub); margin-bottom:4px;">
+      例：◯◯県知事賞、◯◯コンテスト最優秀賞 など
+    </p>
+    <div class="free-text"></div>
+
+    <h3>メディア掲載歴（あれば）</h3>
+    <p style="font-size:9.5pt; color:var(--text-sub); margin-bottom:4px;">
+      例：日経新聞、NHK、地元紙、業界誌 など
+    </p>
+    <div class="free-text"></div>
+  </section>
+
+  <!-- 5. マーケティング・予算感 -->
+  <section>
+    <h2>5. マーケティング・予算感</h2>
+    <table class="form">
+      <tr>
+        <th>月間広告・販促予算（おおよそ）</th>
+        <td class="fill">　　　　　　　　　　　　　　　円</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- 6. 連絡先 -->
+  <section>
+    <h2>6. ご連絡先</h2>
+    <table class="form">
+      <tr><th>ご担当者名</th><td class="fill"></td></tr>
+      <tr><th>メールアドレス</th><td class="fill"></td></tr>
+      <tr><th>電話番号</th><td class="fill"></td></tr>
+      <tr>
+        <th>希望する連絡手段</th>
+        <td>
+          <span class="choices">
+            <span><span class="box"></span>メール</span>
+            <span><span class="box"></span>電話</span>
+            <span><span class="box"></span>どちらでも</span>
+          </span>
+        </td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- フッター：返送方法・ご記入後の流れ -->
+  <footer>
+    <div class="send-box">
+      <strong>📮 返送方法</strong><br>
+      本シートに必要事項をご記入のうえ、以下までご返送ください。
+      <ul style="margin-top:6px; padding-left:20px;">
+        <li>メール添付（記入済PDF or 写真）：<strong>info@futurebright.co.jp</strong></li>
+        <li>記入後の自動返信：3営業日以内に当社よりご連絡いたします</li>
+      </ul>
+    </div>
+
+    <strong>ご記入後の流れ</strong>
+    <ol style="padding-left:18px; margin-top:4px;">
+      <li>本シートをメール添付（または印刷スキャン）で送付</li>
+      <li>当社にて受領後、AI分析エンジンで参入分析レポート（PDF）を作成</li>
+      <li><strong>3営業日以内</strong>に分析レポートをご返送</li>
+      <li>ご希望に応じてオンライン or 対面でのご説明MTG設定</li>
+    </ol>
+
+    <div class="company">FutureBright株式会社</div>
+    <div>
+      代表取締役 木原 平　／　Email: info@futurebright.co.jp　／　Web: https://futurebright.co.jp/<br>
+      ご不明点はメールにてお気軽にお問い合わせください。
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

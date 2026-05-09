@@ -1,0 +1,32 @@
+# SPEED会員機能（Stripe決済）追加の環境変数
+# このファイルの内容を本番の .env / Cloud Run env-vars に追記してください
+
+# ============================================================
+# Stripe（必須）
+# ============================================================
+# Stripe Dashboard → 開発者 → APIキー
+STRIPE_API_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxx
+# Webhook → エンドポイント → 署名シークレット
+STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxxxxxxx
+
+# Products → 各プラン → Price → ID
+STRIPE_PRICE_LIGHT=price_speed_light_monthly_xxxxx
+STRIPE_PRICE_STANDARD=price_speed_standard_monthly_xxxxx
+
+# ============================================================
+# LIFF（会員ページ用）
+# ============================================================
+# LINE Developers Console → LIFFアプリ → ID
+LIFF_MEMBER_ID=2009886383-xxxxxxx
+
+# ============================================================
+# 既存環境変数（既に設定済の前提）
+# ============================================================
+# LINE_CHANNEL_SECRET=xxx
+# LINE_CHANNEL_ACCESS_TOKEN=xxx
+# CHATWORK_API_TOKEN=xxx
+# CHATWORK_ROOM_ID=326433964
+# GCP_PROJECT=furulead-speed-bot
+# GCS_BUCKET=furulead-speed-reports
+# BASE_URL=https://furulead-speed-bot-xxxxxxx.asia-northeast1.run.app
+# ANTHROPIC_API_KEY=xxx (月次配信バッチで使用)

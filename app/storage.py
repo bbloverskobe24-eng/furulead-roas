@@ -157,3 +157,86 @@ def mark_delivered(report_id, line_user_id=None):
         _reports_col(line_user_id).document(report_id).update({
             "delivered_at": _now(),
         })
+
+
+# ==================================================
+# membership (SPEED会員機能)
+# ==================================================
+def update_membership(line_user_id: str, **fields):
+    """会員情報を user.membership.* に保存。"""
+    if not fields:
+        return
+    user_ref = _client().collection("users").document(line_user_id)
+    snap = user_ref.get()
+    if not snap.exists:
+        # 念のためuserを作成
+        upsert_user(line_user_id)
+    update_data = {f"membership.{k}": v for k, v in fields.items()}
+    update_data["membership.updated_at"] = _now()
+    user_ref.update(update_data)
+
+
+def get_membership(line_user_id: str) -> Optional[dict]:
+    user = get_user(line_user_id)
+    if not user:
+        return None
+    return user.get("membership") or {}
+
+
+def list_active_members(plan: Optional[str] = None) -> list:
+    """課金中（active）の会員一覧。月次配信バッチ用。"""
+    col = _client().collection("users").where("membership.status", "==", "active")
+    if plan:
+        col = col.where("membership.plan", "==", plan)
+    result = []
+    for snap in col.stream():
+        data = snap.to_dict()
+        data["line_user_id"] = snap.id
+        result.append(data)
+    return result
+
+
+def find_user_by_stripe_customer(stripe_customer_id: str) -> Optional[dict]:
+    """Stripe customer ID から user を逆引き（webhook処理用）。"""
+    snaps = _client().collection("users") \
+        .where("membership.stripe_customer_id", "==", stripe_customer_id) \
+        .limit(1).stream()
+    for snap in snaps:
+        data = snap.to_dict()
+        data["line_user_id"] = snap.id
+        return data
+    return None
+
+
+def save_member_event(event_id: str, event_type: str, line_user_id: Optional[str],
+                      raw_data: dict):
+    """Stripe webhook イベントの監査ログ。冪等性のため event_id をdoc IDに使用。"""
+    _client().collection("member_events").document(event_id).set({
+        "event_id": event_id,
+        "type": event_type,
+        "line_user_id": line_user_id,
+        "stripe_event_data": raw_data,
+        "processed_at": _now(),
+    }, merge=True)
+
+
+def is_event_already_processed(event_id: str) -> bool:
+    snap = _client().collection("member_events").document(event_id).get()
+    return snap.exists
+
+
+def record_member_delivery(line_user_id: str, plan: str, content_type: str,
+                            related_url: Optional[str] = None,
+                            delivery_status: str = "sent"):
+    """月次配信履歴。delivery_id 自動生成（YYYY_MM_uid_type形式）。"""
+    now = _now()
+    delivery_id = f"{now.strftime('%Y_%m')}_{line_user_id[-8:]}_{content_type}"
+    _client().collection("member_deliveries").document(delivery_id).set({
+        "delivery_id": delivery_id,
+        "line_user_id": line_user_id,
+        "plan": plan,
+        "content_type": content_type,
+        "related_url": related_url,
+        "delivery_status": delivery_status,
+        "delivered_at": now,
+    })
