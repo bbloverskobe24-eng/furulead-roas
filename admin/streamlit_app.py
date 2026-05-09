@@ -33,8 +33,8 @@ _FIRESTORE_ERR = "⚠️ Firestore未接続です。GCPサービスアカウン�
 st.title("🚀 ふるりーどSPEED 管理画面")
 st.caption("CSO用：回答レビュー・PDF生成・承認・配信 / ROAS分析")
 
-tab1, tab2, tab3, tab4 = st.tabs(
-    ["📋 セッション一覧", "📄 個別レビュー", "📊 統計", "🎯 ROAS分析"]
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    ["📋 セッション一覧", "📄 個別レビュー", "📊 統計", "🎯 ROAS分析", "⚡ SPEED会員管理"]
 )
 
 # ==================================================
@@ -233,3 +233,194 @@ with tab3:
 # ==================================================
 with tab4:
     roas_tab.render()
+
+# ==================================================
+# タブ5：SPEED会員管理
+# ==================================================
+with tab5:
+    st.subheader("⚡ SPEED会員管理")
+    st.caption(
+        "公式LINE有料会員（SPEED Light / Standard）の一覧・配信履歴・手動配信操作"
+    )
+
+    if not _FIRESTORE_OK:
+        st.error(_FIRESTORE_ERR)
+    else:
+        from datetime import datetime, timedelta
+
+        # ----- 会員一覧取得 -----
+        try:
+            db = storage._client()
+            all_users = []
+            for snap in db.collection("users").stream():
+                data = snap.to_dict()
+                membership = data.get("membership") or {}
+                if membership.get("plan"):
+                    data["line_user_id"] = snap.id
+                    all_users.append(data)
+        except Exception as e:
+            st.error(f"会員データ取得失敗: {type(e).__name__}: {e}")
+            all_users = []
+
+        # ----- KPIサマリ -----
+        st.markdown("##### 📈 KPIサマリ")
+        active_users = [u for u in all_users if (u.get("membership") or {}).get("status") in ("active", "trialing")]
+        light = [u for u in active_users if (u.get("membership") or {}).get("plan") == "speed_light"]
+        standard = [u for u in active_users if (u.get("membership") or {}).get("plan") == "speed_standard"]
+        canceled = [u for u in all_users if (u.get("membership") or {}).get("status") == "canceled"]
+        past_due = [u for u in all_users if (u.get("membership") or {}).get("status") == "past_due"]
+
+        mrr_yen = len(light) * 4980 + len(standard) * 9800
+
+        c1, c2, c3, c4, c5 = st.columns(5)
+        c1.metric("Active会員", f"{len(active_users)}名")
+        c2.metric("├ Light", f"{len(light)}名", f"¥{len(light)*4980:,}")
+        c3.metric("└ Standard", f"{len(standard)}名", f"¥{len(standard)*9800:,}")
+        c4.metric("MRR（月次経常収益）", f"¥{mrr_yen:,}", "税別")
+        c5.metric("解約/支払失敗", f"{len(canceled)+len(past_due)}名",
+                  f"({len(past_due)} past_due)")
+
+        st.divider()
+
+        # ----- フィルター付き会員一覧 -----
+        st.markdown("##### 👥 会員一覧")
+        if not all_users:
+            st.info("まだ会員はいません。Stripe決済が完了すると自動でここに表示されます。")
+        else:
+            col_f1, col_f2 = st.columns(2)
+            with col_f1:
+                status_filter = st.multiselect(
+                    "ステータス",
+                    ["active", "trialing", "past_due", "canceled"],
+                    default=["active", "trialing"],
+                )
+            with col_f2:
+                plan_filter = st.multiselect(
+                    "プラン",
+                    ["speed_light", "speed_standard"],
+                    default=["speed_light", "speed_standard"],
+                )
+
+            filtered = []
+            for u in all_users:
+                m = u.get("membership") or {}
+                if m.get("status") not in status_filter:
+                    continue
+                if m.get("plan") not in plan_filter:
+                    continue
+                filtered.append({
+                    "line_user_id": u["line_user_id"][:12] + "...",
+                    "事業者名": u.get("display_name") or "—",
+                    "プラン": "Light" if m.get("plan") == "speed_light" else "Standard",
+                    "ステータス": m.get("status", "—"),
+                    "課金期間終了": str(m.get("current_period_end") or "—")[:10],
+                    "解約予定": "✓" if m.get("cancel_at_period_end") else "",
+                    "登録日": str(m.get("registered_at") or "—")[:10],
+                })
+
+            if filtered:
+                st.dataframe(pd.DataFrame(filtered), use_container_width=True, hide_index=True)
+            else:
+                st.caption("該当する会員がいません")
+
+        st.divider()
+
+        # ----- 個別会員詳細・操作 -----
+        st.markdown("##### 🔍 個別会員 詳細・操作")
+        if all_users:
+            opts = {
+                f"{(u.get('display_name') or u['line_user_id'][:8])} "
+                f"({(u.get('membership') or {}).get('plan', '—')} / "
+                f"{(u.get('membership') or {}).get('status', '—')})": u["line_user_id"]
+                for u in all_users
+            }
+            selected_label = st.selectbox("会員を選択", list(opts.keys()), key="member_select")
+            selected_uid = opts[selected_label]
+            user = next(u for u in all_users if u["line_user_id"] == selected_uid)
+            mem = user.get("membership") or {}
+
+            d1, d2 = st.columns(2)
+            with d1:
+                st.markdown("**会員情報**")
+                st.write(f"**LINE user ID**: `{selected_uid}`")
+                st.write(f"**Display Name**: {user.get('display_name') or '—'}")
+                st.write(f"**プラン**: {mem.get('plan', '—')}")
+                st.write(f"**ステータス**: {mem.get('status', '—')}")
+                st.write(f"**Stripe Customer**: `{mem.get('stripe_customer_id') or '—'}`")
+                st.write(f"**Stripe Subscription**: `{mem.get('stripe_subscription_id') or '—'}`")
+
+            with d2:
+                st.markdown("**期間情報**")
+                st.write(f"**登録日**: {str(mem.get('registered_at') or '—')[:19]}")
+                st.write(f"**今期間 開始**: {str(mem.get('current_period_start') or '—')[:19]}")
+                st.write(f"**今期間 終了**: {str(mem.get('current_period_end') or '—')[:19]}")
+                st.write(f"**解約予定（期末）**: {'はい' if mem.get('cancel_at_period_end') else 'いいえ'}")
+                st.write(f"**トライアル終了**: {str(mem.get('trial_end') or '—')[:19]}")
+                st.write(f"**解約日**: {str(mem.get('canceled_at') or '—')[:19]}")
+
+            st.markdown("**操作**")
+            op1, op2, op3 = st.columns(3)
+            with op1:
+                if st.button("📨 月次配信テスト", key="test_dispatch", use_container_width=True):
+                    try:
+                        from app import monthly_dispatcher
+                        plan = mem.get("plan", "speed_light")
+                        result = monthly_dispatcher.dispatch_for_user(selected_uid, plan, user)
+                        st.success(f"配信結果: {result}")
+                    except Exception as e:
+                        st.error(f"配信失敗: {type(e).__name__}: {e}")
+            with op2:
+                if st.button("🔁 Stripe同期", key="stripe_sync", use_container_width=True,
+                             help="Stripe側のサブスク状態をFirestoreに再同期（実装は別途）"):
+                    st.info("（Stripe同期はPhase 5の追加実装範囲。現状は手動更新のみ）")
+            with op3:
+                if st.button("🚪 解約処理（手動）", key="manual_cancel", use_container_width=True):
+                    if mem.get("status") in ("active", "trialing", "past_due"):
+                        from app import member as member_module
+                        member_module.mark_canceled(selected_uid)
+                        st.warning("Firestore上を解約に変更しました。Stripe側でも別途解約処理を実施してください。")
+                    else:
+                        st.info(f"既に {mem.get('status')} ステータスのため変更不要")
+
+        st.divider()
+
+        # ----- 月次配信履歴 -----
+        st.markdown("##### 📜 月次配信履歴（直近30件）")
+        try:
+            from google.cloud import firestore as _fs
+            deliveries = []
+            for snap in db.collection("member_deliveries") \
+                    .order_by("delivered_at", direction=_fs.Query.DESCENDING) \
+                    .limit(30).stream():
+                d = snap.to_dict()
+                deliveries.append({
+                    "配信日時": str(d.get("delivered_at") or "—")[:19],
+                    "LINE user": (d.get("line_user_id") or "—")[:12] + "...",
+                    "プラン": d.get("plan") or "—",
+                    "コンテンツ": d.get("content_type") or "—",
+                    "ステータス": d.get("delivery_status") or "—",
+                })
+            if deliveries:
+                st.dataframe(pd.DataFrame(deliveries), use_container_width=True, hide_index=True)
+            else:
+                st.caption("配信履歴はまだありません")
+        except Exception as e:
+            st.warning(f"配信履歴取得失敗: {type(e).__name__}: {e}")
+
+        st.divider()
+
+        # ----- 一括月次配信トリガー（管理者用） -----
+        st.markdown("##### 🚀 一括月次配信トリガー")
+        st.caption(
+            "全active会員に月次レポートを配信します。通常はCloud Schedulerが毎月15日に自動実行。"
+            "これは手動実行ボタンです（緊急時のみ使用）"
+        )
+        confirm = st.checkbox("⚠️ 全会員への配信を承認します", key="dispatch_confirm")
+        if st.button("📢 一括配信を実行", disabled=not confirm, use_container_width=True):
+            try:
+                from app import monthly_dispatcher
+                with st.spinner("配信実行中..."):
+                    stats = monthly_dispatcher.dispatch_all()
+                st.success(f"配信完了: {stats}")
+            except Exception as e:
+                st.error(f"配信失敗: {type(e).__name__}: {e}")
